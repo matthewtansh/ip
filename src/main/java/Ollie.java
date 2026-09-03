@@ -11,7 +11,7 @@ public class Ollie {
                 + "| | | | | | |/ _ \\\n"
                 + "| |_| | | | |  __/\n"
                 + " \\___/|_|_|_|\\___|\n";
-        ArrayList<String> tasks = new ArrayList<>();
+        ArrayList<Task> tasks = new ArrayList<>();
 
         System.out.print(banner);
         System.out.println("Hello! I'm Ollie.");
@@ -29,11 +29,24 @@ public class Ollie {
                 }
 
                 if (command.equals("list")) {
+                    System.out.println(UI_INDENTATION + "Here are the tasks in your list:");
                     for (int i = 0; i < tasks.size(); i++) {
                         System.out.println(UI_INDENTATION + (i + 1) + ". " + tasks.get(i));
                     }
+                } else if (command.startsWith("mark ")) {
+                    int taskIndex = Integer.parseInt(command.substring("mark ".length())) - 1;
+                    Task task = tasks.get(taskIndex);
+                    task.mark();
+                    System.out.println(UI_INDENTATION + "Nice! I've marked this task as done.");
+                    System.out.println(UI_INDENTATION + "  " + task);
+                } else if (command.startsWith("unmark ")) {
+                    int taskIndex = Integer.parseInt(command.substring("unmark ".length())) - 1;
+                    Task task = tasks.get(taskIndex);
+                    task.unmark();
+                    System.out.println(UI_INDENTATION + "Nice! I've marked this task as undone.");
+                    System.out.println(UI_INDENTATION + "  " + task);
                 } else {
-                    tasks.add(command);
+                    tasks.add(new Task(command));
                     System.out.println(UI_INDENTATION + "added: " + command);
                 }
 

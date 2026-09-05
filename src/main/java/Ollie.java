@@ -50,6 +50,7 @@ public class Ollie {
             System.out.println(UI_INDENTATION + "event <description> /from <date> /to <date>");
             System.out.println(UI_INDENTATION + "mark <task number>");
             System.out.println(UI_INDENTATION + "unmark <task number>");
+            System.out.println(UI_INDENTATION + "delete <task number>");
             System.out.println(UI_INDENTATION + "bye");
         } else if (command.equals("list")) {
             System.out.println(UI_INDENTATION + "Here are the tasks in your list:");
@@ -64,6 +65,10 @@ public class Ollie {
             int taskIndex = getTaskIndex(command, "unmark", tasks.size());
             tasks.get(taskIndex).unmark();
             System.out.println(UI_INDENTATION + "Nice! I've marked this task as undone.");
+        } else if (command.equals("delete") || command.startsWith("delete ")) {
+            int taskIndex = getTaskIndex(command, "delete", tasks.size());
+            tasks.remove(taskIndex);
+            System.out.println(UI_INDENTATION + "Noted. I've removed this task:");
         } else {
             addTask(tasks, createTask(command));
         }

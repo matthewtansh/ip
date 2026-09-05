@@ -39,10 +39,12 @@ public class Ollie {
     }
 
     private static boolean handleCommand(String command, ArrayList<Task> tasks) throws OllieException {
-        if (command.equals("bye")) {
+        CommandType commandType = CommandType.from(command);
+
+        if (commandType == CommandType.BYE) {
             System.out.println(UI_INDENTATION + "Bye. Hope to see you again soon!");
             return true;
-        } else if (command.equals("help")) {
+        } else if (commandType == CommandType.HELP) {
             System.out.println(UI_INDENTATION + "help");
             System.out.println(UI_INDENTATION + "list");
             System.out.println(UI_INDENTATION + "todo <description>");
@@ -52,20 +54,20 @@ public class Ollie {
             System.out.println(UI_INDENTATION + "unmark <task number>");
             System.out.println(UI_INDENTATION + "delete <task number>");
             System.out.println(UI_INDENTATION + "bye");
-        } else if (command.equals("list")) {
+        } else if (commandType == CommandType.LIST) {
             System.out.println(UI_INDENTATION + "Here are the tasks in your list:");
             for (int i = 0; i < tasks.size(); i++) {
                 System.out.println(UI_INDENTATION + (i + 1) + ". " + tasks.get(i));
             }
-        } else if (command.equals("mark") || command.startsWith("mark ")) {
+        } else if (commandType == CommandType.MARK) {
             int taskIndex = getTaskIndex(command, "mark", tasks.size());
             tasks.get(taskIndex).mark();
             System.out.println(UI_INDENTATION + "Nice! I've marked this task as done.");
-        } else if (command.equals("unmark") || command.startsWith("unmark ")) {
+        } else if (commandType == CommandType.UNMARK) {
             int taskIndex = getTaskIndex(command, "unmark", tasks.size());
             tasks.get(taskIndex).unmark();
             System.out.println(UI_INDENTATION + "Nice! I've marked this task as undone.");
-        } else if (command.equals("delete") || command.startsWith("delete ")) {
+        } else if (commandType == CommandType.DELETE) {
             int taskIndex = getTaskIndex(command, "delete", tasks.size());
             tasks.remove(taskIndex);
             System.out.println(UI_INDENTATION + "Noted. I've removed this task:");

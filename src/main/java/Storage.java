@@ -17,7 +17,7 @@ public class Storage {
         this.filePath = filePath;
     }
 
-    public ArrayList<Task> load() throws OllieException {
+    public List<Task> load() throws OllieException {
         if (!Files.exists(filePath)) {
             return new ArrayList<>();
         }

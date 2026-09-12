@@ -1,3 +1,5 @@
+package ollie;
+
 public enum CommandType {
     HELP,
     LIST,

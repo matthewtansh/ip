@@ -1,204 +1,105 @@
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Ollie {
     private static final Path DATA_FILE_PATH = Path.of("data", "ollie.txt");
-    private static final String UI_HORIZONTAL_LINE = "------------------------------------------------------------";
-    private static final String UI_INDENTATION = "    ";
 
-    public static void main(String[] args) {
-        String banner = "  ___  _ _ _      \n"
-                + " / _ \\| | (_) ___ \n"
-                + "| | | | | | |/ _ \\\n"
-                + "| |_| | | | |  __/\n"
-                + " \\___/|_|_|_|\\___|\n";
-        Storage storage = new Storage(DATA_FILE_PATH);
+    private final Parser parser;
+    private final Storage storage;
+    private final UI ui;
+    private TaskList tasks;
 
-        System.out.print(banner);
-        System.out.println("Hello! I'm Ollie.");
-        System.out.println("What can I do for you?");
-        ArrayList<Task> tasks = loadTasks(storage);
-        System.out.println(UI_HORIZONTAL_LINE);
+    public Ollie(Path filePath) {
+        parser = new Parser();
+        storage = new Storage(filePath);
+        ui = new UI();
+    }
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            while (scanner.hasNextLine()) {
-                String command = scanner.nextLine().trim();
-                boolean isExit = false;
+    public void run() {
+        ui.showWelcome();
+        tasks = loadTasks();
+        ui.showDivider();
 
-                try {
-                    isExit = handleCommand(command, tasks, storage);
-                } catch (OllieException e) {
-                    System.out.println(UI_INDENTATION + "OOPS! " + e.getMessage());
-                }
+        while (ui.hasNextCommand()) {
+            String command = ui.readCommand();
+            boolean isExit = false;
 
-                System.out.println(UI_HORIZONTAL_LINE);
+            try {
+                isExit = handleCommand(command);
+            } catch (OllieException e) {
+                ui.showError(e.getMessage());
+            }
 
-                if (isExit) {
-                    break;
-                }
+            ui.showDivider();
+            if (isExit) {
+                break;
             }
         }
     }
 
-    private static boolean handleCommand(String command, ArrayList<Task> tasks, Storage storage)
-            throws OllieException {
-        CommandType commandType = CommandType.from(command);
+    public static void main(String[] args) {
+        new Ollie(DATA_FILE_PATH).run();
+    }
 
-        if (commandType == CommandType.BYE) {
-            System.out.println(UI_INDENTATION + "Bye. Hope to see you again soon!");
-            return true;
-        } else if (commandType == CommandType.HELP) {
-            System.out.println(UI_INDENTATION + "help");
-            System.out.println(UI_INDENTATION + "list");
-            System.out.println(UI_INDENTATION + "todo <description>");
-            System.out.println(UI_INDENTATION + "deadline <description> /by <yyyy-MM-dd>");
-            System.out.println(UI_INDENTATION + "event <description> /from <yyyy-MM-dd> /to <yyyy-MM-dd>");
-            System.out.println(UI_INDENTATION + "mark <task number>");
-            System.out.println(UI_INDENTATION + "unmark <task number>");
-            System.out.println(UI_INDENTATION + "delete <task number>");
-            System.out.println(UI_INDENTATION + "bye");
-        } else if (commandType == CommandType.LIST) {
-            System.out.println(UI_INDENTATION + "Here are the tasks in your list:");
-            for (int i = 0; i < tasks.size(); i++) {
-                System.out.println(UI_INDENTATION + (i + 1) + ". " + tasks.get(i));
-            }
-        } else if (commandType == CommandType.MARK) {
-            int taskIndex = getTaskIndex(command, "mark", tasks.size());
-            tasks.get(taskIndex).mark();
-            storage.save(tasks);
-            System.out.println(UI_INDENTATION + "Nice! I've marked this task as done.");
-        } else if (commandType == CommandType.UNMARK) {
-            int taskIndex = getTaskIndex(command, "unmark", tasks.size());
-            tasks.get(taskIndex).unmark();
-            storage.save(tasks);
-            System.out.println(UI_INDENTATION + "Nice! I've marked this task as undone.");
-        } else if (commandType == CommandType.DELETE) {
-            int taskIndex = getTaskIndex(command, "delete", tasks.size());
-            tasks.remove(taskIndex);
-            storage.save(tasks);
-            System.out.println(UI_INDENTATION + "Noted. I've removed this task:");
-        } else {
-            addTask(tasks, createTask(command), storage);
+    private boolean handleCommand(String command) throws OllieException {
+        CommandType commandType = parser.parseCommand(command);
+
+        switch (commandType) {
+            case BYE:
+                ui.showGoodbye();
+                return true;
+            case HELP:
+                ui.showHelp();
+                break;
+            case LIST:
+                ui.showTaskList(tasks);
+                break;
+            case MARK:
+                int markIndex = parser.parseTaskIndex(command, "mark", tasks.size());
+                tasks.mark(markIndex);
+                saveTasks();
+                ui.showTaskMarked();
+                break;
+            case UNMARK:
+                int unmarkIndex = parser.parseTaskIndex(command, "unmark", tasks.size());
+                tasks.unmark(unmarkIndex);
+                saveTasks();
+                ui.showTaskUnmarked();
+                break;
+            case DELETE:
+                int deleteIndex = parser.parseTaskIndex(command, "delete", tasks.size());
+                tasks.delete(deleteIndex);
+                saveTasks();
+                ui.showTaskDeleted();
+                break;
+            case TODO:
+            case DEADLINE:
+            case EVENT:
+            case UNKNOWN:
+                addTask(parser.parseTask(command));
+                break;
+            default:
+                throw new OllieException("I don't recognize that command.");
         }
 
         return false;
     }
 
-    private static ArrayList<Task> loadTasks(Storage storage) {
+    private TaskList loadTasks() {
         try {
-            return storage.load();
+            return new TaskList(storage.load());
         } catch (OllieException e) {
-            System.out.println(UI_INDENTATION + "OOPS! " + e.getMessage());
-            return new ArrayList<>();
+            ui.showError(e.getMessage());
+            return new TaskList();
         }
     }
 
-    private static int getTaskIndex(String command, String action, int taskCount) throws OllieException {
-        String taskNumberText = command.substring(action.length()).trim();
-        if (taskNumberText.isEmpty()) {
-            throw new OllieException("Tell me which task to " + action + ". Try: " + action + " <task number>.");
-        }
-
-        int taskNumber;
-        try {
-            taskNumber = Integer.parseInt(taskNumberText);
-        } catch (NumberFormatException e) {
-            throw new OllieException("The task number must be a whole number.");
-        }
-
-        if (taskCount == 0) {
-            throw new OllieException("There are no tasks to " + action + ".");
-        } else if (taskNumber < 1 || taskNumber > taskCount) {
-            throw new OllieException("Choose a task number between 1 and " + taskCount + ".");
-        }
-
-        return taskNumber - 1;
-    }
-
-    private static void addTask(ArrayList<Task> tasks, Task task, Storage storage) throws OllieException {
+    private void addTask(Task task) throws OllieException {
         tasks.add(task);
-        storage.save(tasks);
-        System.out.println(UI_INDENTATION + "Got it. I've added this task.");
+        saveTasks();
+        ui.showTaskAdded();
     }
 
-    private static Task createTask(String command) throws OllieException {
-        if (command.isEmpty()) {
-            throw new OllieException("Please enter a command. Type help to see the available commands.");
-        } else if (command.equals("todo") || command.startsWith("todo ")) {
-            return createTodo(command);
-        } else if (command.equals("deadline") || command.startsWith("deadline ")) {
-            return createDeadline(command);
-        } else if (command.equals("event") || command.startsWith("event ")) {
-            return createEvent(command);
-        }
-
-        throw new OllieException("I don't recognize that command. Type help to see what I understand.");
-    }
-
-    private static Todo createTodo(String command) throws OllieException {
-        String description = command.substring("todo".length()).trim();
-        if (description.isEmpty()) {
-            throw new OllieException("A todo needs a description. Try: todo <description>.");
-        }
-
-        return new Todo(description);
-    }
-
-    private static Deadline createDeadline(String command) throws OllieException {
-        String details = command.substring("deadline".length()).trim();
-        int byIndex = details.indexOf("/by");
-
-        if (byIndex < 0) {
-            throw new OllieException("A deadline needs /by followed by a date.");
-        }
-
-        String description = details.substring(0, byIndex).trim();
-        String byText = details.substring(byIndex + "/by".length()).trim();
-        if (description.isEmpty()) {
-            throw new OllieException("A deadline needs a description before /by.");
-        } else if (byText.isEmpty()) {
-            throw new OllieException("A deadline needs a date after /by.");
-        }
-
-        LocalDate by = parseDate(byText, "deadline date");
-        return new Deadline(description, by);
-    }
-
-    private static Event createEvent(String command) throws OllieException {
-        String details = command.substring("event".length()).trim();
-        int fromIndex = details.indexOf("/from");
-        int toIndex = fromIndex < 0 ? -1 : details.indexOf("/to", fromIndex + "/from".length());
-
-        if (fromIndex < 0) {
-            throw new OllieException("An event needs /from followed by a start date.");
-        } else if (toIndex < 0) {
-            throw new OllieException("An event needs /to followed by an end date.");
-        }
-
-        String description = details.substring(0, fromIndex).trim();
-        String fromText = details.substring(fromIndex + "/from".length(), toIndex).trim();
-        String toText = details.substring(toIndex + "/to".length()).trim();
-        if (description.isEmpty()) {
-            throw new OllieException("An event needs a description before /from.");
-        } else if (fromText.isEmpty()) {
-            throw new OllieException("An event needs a start date after /from.");
-        } else if (toText.isEmpty()) {
-            throw new OllieException("An event needs an end date after /to.");
-        }
-
-        LocalDate from = parseDate(fromText, "event start date");
-        LocalDate to = parseDate(toText, "event end date");
-        return new Event(description, from, to);
-    }
-
-    private static LocalDate parseDate(String dateText, String dateDescription) throws OllieException {
-        try {
-            return LocalDate.parse(dateText);
-        } catch (DateTimeParseException e) {
-            throw new OllieException("The " + dateDescription + " must use yyyy-MM-dd format, e.g., 2019-12-02.");
-        }
+    private void saveTasks() throws OllieException {
+        storage.save(tasks.getTasks());
     }
 }

@@ -5,30 +5,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Loads and saves Ollie's tasks in a text file.
- */
 public class Storage {
     private static final String FIELD_SEPARATOR = " | ";
     private static final String FIELD_SEPARATOR_REGEX = " \\| ";
 
     private final Path filePath;
 
-    /**
-     * Creates storage that uses the specified file path.
-     *
-     * @param filePath Relative path of the task data file.
-     */
     public Storage(Path filePath) {
         this.filePath = filePath;
     }
 
-    /**
-     * Loads tasks from the data file.
-     *
-     * @return Tasks reconstructed from the data file, or an empty list if the file does not exist.
-     * @throws OllieException If the file cannot be read or contains invalid task data.
-     */
     public ArrayList<Task> load() throws OllieException {
         if (!Files.exists(filePath)) {
             return new ArrayList<>();
@@ -48,12 +34,6 @@ public class Storage {
         }
     }
 
-    /**
-     * Replaces the data file with the current task list.
-     *
-     * @param tasks Tasks to save.
-     * @throws OllieException If the tasks cannot be written to the data file.
-     */
     public void save(List<Task> tasks) throws OllieException {
         try {
             Path parentDirectory = filePath.getParent();
@@ -71,13 +51,6 @@ public class Storage {
         }
     }
 
-    /**
-     * Converts a task into one line of data for the save file.
-     *
-     * @param task Task to convert.
-     * @return Serialized task data.
-     * @throws OllieException If the task type is not supported.
-     */
     private String formatTask(Task task) throws OllieException {
         String status = task.isDone() ? "1" : "0";
         if (task instanceof Todo) {
@@ -94,14 +67,6 @@ public class Storage {
         throw new OllieException("I couldn't save an unsupported task type.");
     }
 
-    /**
-     * Reconstructs and validates a task from one line of saved data.
-     *
-     * @param line Saved task data.
-     * @param lineNumber One-based line number used in error messages.
-     * @return Reconstructed task.
-     * @throws OllieException If the saved task data is invalid.
-     */
     private Task parseTask(String line, int lineNumber) throws OllieException {
         String[] fields = line.split(FIELD_SEPARATOR_REGEX, -1);
         if (fields.length < 3 || fields[2].isBlank()) {
@@ -140,7 +105,6 @@ public class Storage {
         return task;
     }
 
-    /** Returns an exception identifying an invalid line in the data file. */
     private OllieException invalidData(int lineNumber) {
         return new OllieException("The saved task on line " + lineNumber + " is invalid.");
     }

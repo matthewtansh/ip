@@ -1,4 +1,6 @@
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -52,8 +54,8 @@ public class Ollie {
             System.out.println(UI_INDENTATION + "help");
             System.out.println(UI_INDENTATION + "list");
             System.out.println(UI_INDENTATION + "todo <description>");
-            System.out.println(UI_INDENTATION + "deadline <description> /by <date>");
-            System.out.println(UI_INDENTATION + "event <description> /from <date> /to <date>");
+            System.out.println(UI_INDENTATION + "deadline <description> /by <yyyy-MM-dd>");
+            System.out.println(UI_INDENTATION + "event <description> /from <yyyy-MM-dd> /to <yyyy-MM-dd>");
             System.out.println(UI_INDENTATION + "mark <task number>");
             System.out.println(UI_INDENTATION + "unmark <task number>");
             System.out.println(UI_INDENTATION + "delete <task number>");
@@ -85,7 +87,6 @@ public class Ollie {
         return false;
     }
 
-    /** Loads saved tasks and starts with an empty list if loading fails. */
     private static ArrayList<Task> loadTasks(Storage storage) {
         try {
             return storage.load();
@@ -155,13 +156,14 @@ public class Ollie {
         }
 
         String description = details.substring(0, byIndex).trim();
-        String by = details.substring(byIndex + "/by".length()).trim();
+        String byText = details.substring(byIndex + "/by".length()).trim();
         if (description.isEmpty()) {
             throw new OllieException("A deadline needs a description before /by.");
-        } else if (by.isEmpty()) {
+        } else if (byText.isEmpty()) {
             throw new OllieException("A deadline needs a date after /by.");
         }
 
+        LocalDate by = parseDate(byText, "deadline date");
         return new Deadline(description, by);
     }
 
@@ -171,22 +173,32 @@ public class Ollie {
         int toIndex = fromIndex < 0 ? -1 : details.indexOf("/to", fromIndex + "/from".length());
 
         if (fromIndex < 0) {
-            throw new OllieException("An event needs /from followed by a start time.");
+            throw new OllieException("An event needs /from followed by a start date.");
         } else if (toIndex < 0) {
-            throw new OllieException("An event needs /to followed by an end time.");
+            throw new OllieException("An event needs /to followed by an end date.");
         }
 
         String description = details.substring(0, fromIndex).trim();
-        String from = details.substring(fromIndex + "/from".length(), toIndex).trim();
-        String to = details.substring(toIndex + "/to".length()).trim();
+        String fromText = details.substring(fromIndex + "/from".length(), toIndex).trim();
+        String toText = details.substring(toIndex + "/to".length()).trim();
         if (description.isEmpty()) {
             throw new OllieException("An event needs a description before /from.");
-        } else if (from.isEmpty()) {
-            throw new OllieException("An event needs a start time after /from.");
-        } else if (to.isEmpty()) {
-            throw new OllieException("An event needs an end time after /to.");
+        } else if (fromText.isEmpty()) {
+            throw new OllieException("An event needs a start date after /from.");
+        } else if (toText.isEmpty()) {
+            throw new OllieException("An event needs an end date after /to.");
         }
 
+        LocalDate from = parseDate(fromText, "event start date");
+        LocalDate to = parseDate(toText, "event end date");
         return new Event(description, from, to);
+    }
+
+    private static LocalDate parseDate(String dateText, String dateDescription) throws OllieException {
+        try {
+            return LocalDate.parse(dateText);
+        } catch (DateTimeParseException e) {
+            throw new OllieException("The " + dateDescription + " must use yyyy-MM-dd format, e.g., 2019-12-02.");
+        }
     }
 }

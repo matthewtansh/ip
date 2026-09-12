@@ -1,7 +1,9 @@
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Ollie {
+    private static final Path DATA_FILE_PATH = Path.of("data", "ollie.txt");
     private static final String UI_HORIZONTAL_LINE = "------------------------------------------------------------";
     private static final String UI_INDENTATION = "    ";
 
@@ -11,11 +13,12 @@ public class Ollie {
                 + "| | | | | | |/ _ \\\n"
                 + "| |_| | | | |  __/\n"
                 + " \\___/|_|_|_|\\___|\n";
-        ArrayList<Task> tasks = new ArrayList<>();
+        Storage storage = new Storage(DATA_FILE_PATH);
 
         System.out.print(banner);
         System.out.println("Hello! I'm Ollie.");
         System.out.println("What can I do for you?");
+        ArrayList<Task> tasks = loadTasks(storage);
         System.out.println(UI_HORIZONTAL_LINE);
 
         try (Scanner scanner = new Scanner(System.in)) {
@@ -24,7 +27,7 @@ public class Ollie {
                 boolean isExit = false;
 
                 try {
-                    isExit = handleCommand(command, tasks);
+                    isExit = handleCommand(command, tasks, storage);
                 } catch (OllieException e) {
                     System.out.println(UI_INDENTATION + "OOPS! " + e.getMessage());
                 }
@@ -38,7 +41,8 @@ public class Ollie {
         }
     }
 
-    private static boolean handleCommand(String command, ArrayList<Task> tasks) throws OllieException {
+    private static boolean handleCommand(String command, ArrayList<Task> tasks, Storage storage)
+            throws OllieException {
         CommandType commandType = CommandType.from(command);
 
         if (commandType == CommandType.BYE) {
@@ -62,20 +66,33 @@ public class Ollie {
         } else if (commandType == CommandType.MARK) {
             int taskIndex = getTaskIndex(command, "mark", tasks.size());
             tasks.get(taskIndex).mark();
+            storage.save(tasks);
             System.out.println(UI_INDENTATION + "Nice! I've marked this task as done.");
         } else if (commandType == CommandType.UNMARK) {
             int taskIndex = getTaskIndex(command, "unmark", tasks.size());
             tasks.get(taskIndex).unmark();
+            storage.save(tasks);
             System.out.println(UI_INDENTATION + "Nice! I've marked this task as undone.");
         } else if (commandType == CommandType.DELETE) {
             int taskIndex = getTaskIndex(command, "delete", tasks.size());
             tasks.remove(taskIndex);
+            storage.save(tasks);
             System.out.println(UI_INDENTATION + "Noted. I've removed this task:");
         } else {
-            addTask(tasks, createTask(command));
+            addTask(tasks, createTask(command), storage);
         }
 
         return false;
+    }
+
+    /** Loads saved tasks and starts with an empty list if loading fails. */
+    private static ArrayList<Task> loadTasks(Storage storage) {
+        try {
+            return storage.load();
+        } catch (OllieException e) {
+            System.out.println(UI_INDENTATION + "OOPS! " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     private static int getTaskIndex(String command, String action, int taskCount) throws OllieException {
@@ -100,8 +117,9 @@ public class Ollie {
         return taskNumber - 1;
     }
 
-    private static void addTask(ArrayList<Task> tasks, Task task) {
+    private static void addTask(ArrayList<Task> tasks, Task task, Storage storage) throws OllieException {
         tasks.add(task);
+        storage.save(tasks);
         System.out.println(UI_INDENTATION + "Got it. I've added this task.");
     }
 

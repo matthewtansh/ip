@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,11 +59,12 @@ public class Storage {
             return String.join(FIELD_SEPARATOR, "T", status, task.getDescription());
         } else if (task instanceof Deadline) {
             Deadline deadline = (Deadline) task;
-            return String.join(FIELD_SEPARATOR, "D", status, deadline.getDescription(), deadline.getBy());
+            return String.join(FIELD_SEPARATOR, "D", status, deadline.getDescription(),
+                    deadline.getBy().toString());
         } else if (task instanceof Event) {
             Event event = (Event) task;
             return String.join(FIELD_SEPARATOR, "E", status, event.getDescription(),
-                    event.getFrom(), event.getTo());
+                    event.getFrom().toString(), event.getTo().toString());
         }
 
         throw new OllieException("I couldn't save an unsupported task type.");
@@ -85,13 +88,14 @@ public class Storage {
                 if (fields.length != 4 || fields[3].isBlank()) {
                     throw invalidData(lineNumber);
                 }
-                task = new Deadline(fields[2], fields[3]);
+                task = new Deadline(fields[2], parseDate(fields[3], lineNumber));
                 break;
             case "E":
                 if (fields.length != 5 || fields[3].isBlank() || fields[4].isBlank()) {
                     throw invalidData(lineNumber);
                 }
-                task = new Event(fields[2], fields[3], fields[4]);
+                task = new Event(fields[2], parseDate(fields[3], lineNumber),
+                        parseDate(fields[4], lineNumber));
                 break;
             default:
                 throw invalidData(lineNumber);
@@ -103,6 +107,14 @@ public class Storage {
             throw invalidData(lineNumber);
         }
         return task;
+    }
+
+    private LocalDate parseDate(String dateText, int lineNumber) throws OllieException {
+        try {
+            return LocalDate.parse(dateText);
+        } catch (DateTimeParseException e) {
+            throw invalidData(lineNumber);
+        }
     }
 
     private OllieException invalidData(int lineNumber) {

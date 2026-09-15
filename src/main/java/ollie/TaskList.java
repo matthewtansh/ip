@@ -74,12 +74,10 @@ public class TaskList {
      */
     public TaskList find(String keyword) {
         String normalizedKeyword = keyword.toLowerCase(Locale.ROOT);
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.getDescription().toLowerCase(Locale.ROOT).contains(normalizedKeyword)) {
-                matchingTasks.add(task);
-            }
-        }
+        List<Task> matchingTasks = tasks.stream()
+                .filter(task -> task.getDescription().toLowerCase(Locale.ROOT)
+                        .contains(normalizedKeyword))
+                .toList();
 
         return new TaskList(matchingTasks);
     }

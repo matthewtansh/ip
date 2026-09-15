@@ -1,0 +1,44 @@
+.root {
+    -fx-background-color: #f5f7fb;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.dialog-container {
+    -fx-padding: 12px 4px;
+}
+
+.dialog-message {
+    -fx-background-radius: 12px;
+    -fx-padding: 10px 12px;
+}
+
+.user-dialog .dialog-message {
+    -fx-background-color: #dbeafe;
+}
+
+.ollie-dialog .dialog-message {
+    -fx-background-color: #e5e7eb;
+}
+
+.speaker-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 4px;
+}
+
+.input-bar {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db transparent transparent transparent;
+}
+
+.button {
+    -fx-background-color: #2563eb;
+    -fx-background-radius: 8px;
+    -fx-text-fill: white;
+}

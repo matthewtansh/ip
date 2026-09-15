@@ -29,24 +29,59 @@ public class Ollie {
      */
     public void run() {
         ui.showWelcome();
-        tasks = loadTasks();
+        ensureTasksLoaded();
         ui.showDivider();
 
         while (ui.hasNextCommand()) {
             String command = ui.readCommand();
-            boolean isExit = false;
+            CommandResult result = null;
 
             try {
-                isExit = handleCommand(command);
+                result = handleCommand(command);
+                ui.showResponse(result.response());
             } catch (OllieException e) {
                 ui.showError(e.getMessage());
             }
 
             ui.showDivider();
-            if (isExit) {
+            if (result != null && result.isExit()) {
                 break;
             }
         }
+    }
+
+    /**
+     * Processes a command and returns Ollie's response for a graphical interface.
+     *
+     * @param command Command entered by the user.
+     * @return User-facing response to the command.
+     */
+    public String getResponse(String command) {
+        ensureTasksLoaded();
+        try {
+            return handleCommand(command.trim()).response();
+        } catch (OllieException e) {
+            return ui.getErrorMessage(e.getMessage());
+        }
+    }
+
+    /**
+     * Returns whether the command ends the current chatbot session.
+     *
+     * @param command User command to inspect.
+     * @return True if the command is the bye command.
+     */
+    public boolean isExitCommand(String command) {
+        return parser.parseCommand(command.trim()) == CommandType.BYE;
+    }
+
+    /**
+     * Creates an Ollie chatbot that uses the default task data file.
+     *
+     * @return Ollie configured with the default storage path.
+     */
+    public static Ollie createDefault() {
+        return new Ollie(DATA_FILE_PATH);
     }
 
     /**
@@ -55,59 +90,59 @@ public class Ollie {
      * @param args Command-line arguments, which are not used.
      */
     public static void main(String[] args) {
-        new Ollie(DATA_FILE_PATH).run();
+        createDefault().run();
     }
 
     /**
      * Performs the action represented by a user command.
      *
      * @param command Command entered by the user.
-     * @return True if Ollie should exit after handling the command.
+     * @return Response and exit state produced by the command.
      * @throws OllieException If the command is invalid or its action fails.
      */
-    private boolean handleCommand(String command) throws OllieException {
+    private CommandResult handleCommand(String command) throws OllieException {
         CommandType commandType = parser.parseCommand(command);
 
         switch (commandType) {
             case BYE:
-                ui.showGoodbye();
-                return true;
+                return new CommandResult(ui.getGoodbyeMessage(), true);
             case HELP:
-                ui.showHelp();
-                break;
+                return new CommandResult(ui.getHelpMessage(), false);
             case LIST:
-                ui.showTaskList(tasks);
-                break;
+                return new CommandResult(ui.getTaskListMessage(tasks), false);
             case FIND:
                 String keyword = parser.parseFindKeyword(command);
-                ui.showMatchingTasks(tasks.find(keyword));
-                break;
+                return new CommandResult(ui.getMatchingTasksMessage(tasks.find(keyword)), false);
             case MARK:
                 int markIndex = parser.parseTaskIndex(command, "mark", tasks.size());
                 tasks.mark(markIndex);
                 saveTasks();
-                ui.showTaskMarked();
-                break;
+                return new CommandResult(ui.getTaskMarkedMessage(), false);
             case UNMARK:
                 int unmarkIndex = parser.parseTaskIndex(command, "unmark", tasks.size());
                 tasks.unmark(unmarkIndex);
                 saveTasks();
-                ui.showTaskUnmarked();
-                break;
+                return new CommandResult(ui.getTaskUnmarkedMessage(), false);
             case DELETE:
                 int deleteIndex = parser.parseTaskIndex(command, "delete", tasks.size());
                 tasks.delete(deleteIndex);
                 saveTasks();
-                ui.showTaskDeleted();
-                break;
+                return new CommandResult(ui.getTaskDeletedMessage(), false);
             case TODO, DEADLINE, EVENT, UNKNOWN:
                 addTask(parser.parseTask(command));
-                break;
+                return new CommandResult(ui.getTaskAddedMessage(), false);
             default:
                 throw new OllieException("I don't recognize that command.");
         }
+    }
 
-        return false;
+    /**
+     * Loads saved tasks before processing the first command.
+     */
+    private void ensureTasksLoaded() {
+        if (tasks == null) {
+            tasks = loadTasks();
+        }
     }
 
     /**
@@ -125,7 +160,7 @@ public class Ollie {
     }
 
     /**
-     * Adds a task, saves the task list, and reports the addition.
+     * Adds a task and saves the task list.
      *
      * @param task Task to add.
      * @throws OllieException If the task list cannot be saved.
@@ -133,7 +168,6 @@ public class Ollie {
     private void addTask(Task task) throws OllieException {
         tasks.add(task);
         saveTasks();
-        ui.showTaskAdded();
     }
 
     /**
@@ -143,5 +177,14 @@ public class Ollie {
      */
     private void saveTasks() throws OllieException {
         storage.save(tasks.getTasks());
+    }
+
+    /**
+     * Contains the response and exit state produced by a command.
+     *
+     * @param response User-facing response.
+     * @param isExit Whether the command ends a console session.
+     */
+    private record CommandResult(String response, boolean isExit) {
     }
 }

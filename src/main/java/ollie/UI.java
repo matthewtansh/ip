@@ -53,85 +53,120 @@ public class UI {
     }
 
     /**
-     * Displays Ollie's goodbye message.
-     */
-    public void showGoodbye() {
-        System.out.println(INDENTATION + "Bye. Hope to see you again soon!");
-    }
-
-    /**
-     * Displays the supported command formats.
-     */
-    public void showHelp() {
-        System.out.println(INDENTATION + "help");
-        System.out.println(INDENTATION + "list");
-        System.out.println(INDENTATION + "find <keyword>");
-        System.out.println(INDENTATION + "todo <description>");
-        System.out.println(INDENTATION + "deadline <description> /by <yyyy-MM-dd>");
-        System.out.println(INDENTATION + "event <description> /from <yyyy-MM-dd> /to <yyyy-MM-dd>");
-        System.out.println(INDENTATION + "mark <task number>");
-        System.out.println(INDENTATION + "unmark <task number>");
-        System.out.println(INDENTATION + "delete <task number>");
-        System.out.println(INDENTATION + "bye");
-    }
-
-    /**
-     * Displays all tasks with one-based numbering.
+     * Displays a response from Ollie.
      *
-     * @param tasks Tasks to display.
+     * @param response Response to display.
      */
-    public void showTaskList(TaskList tasks) {
-        System.out.println(INDENTATION + "Here are the tasks in your list:");
-        showNumberedTasks(tasks);
+    public void showResponse(String response) {
+        String indentedResponse = INDENTATION
+                + response.replace(System.lineSeparator(), System.lineSeparator() + INDENTATION);
+        System.out.println(indentedResponse);
     }
 
     /**
-     * Displays tasks that match a search keyword.
+     * Returns Ollie's goodbye message.
      *
-     * @param tasks Matching tasks to display.
+     * @return Goodbye message.
      */
-    public void showMatchingTasks(TaskList tasks) {
-        System.out.println(INDENTATION + "Here are the matching tasks in your list:");
-        showNumberedTasks(tasks);
+    public String getGoodbyeMessage() {
+        return "Bye. Hope to see you again soon!";
     }
 
     /**
-     * Displays tasks with one-based numbering.
+     * Returns the supported command formats.
      *
-     * @param tasks Tasks to display.
+     * @return Help message.
      */
-    private void showNumberedTasks(TaskList tasks) {
+    public String getHelpMessage() {
+        return String.join(System.lineSeparator(),
+                "Here are the commands I understand:",
+                "• help",
+                "• list",
+                "• find <keyword>",
+                "• todo <description>",
+                "• deadline <description>",
+                "    /by <yyyy-MM-dd>",
+                "• event <description>",
+                "    /from <yyyy-MM-dd>",
+                "    /to <yyyy-MM-dd>",
+                "• mark <task number>",
+                "• unmark <task number>",
+                "• delete <task number>",
+                "• bye");
+    }
+
+    /**
+     * Returns all tasks with one-based numbering.
+     *
+     * @param tasks Tasks to include.
+     * @return Task list message.
+     */
+    public String getTaskListMessage(TaskList tasks) {
+        return getNumberedTasksMessage("Here are the tasks in your list:", tasks);
+    }
+
+    /**
+     * Returns tasks that match a search keyword with one-based numbering.
+     *
+     * @param tasks Matching tasks to include.
+     * @return Matching tasks message.
+     */
+    public String getMatchingTasksMessage(TaskList tasks) {
+        return getNumberedTasksMessage("Here are the matching tasks in your list:", tasks);
+    }
+
+    /**
+     * Builds a message containing a heading followed by numbered tasks.
+     *
+     * @param heading Heading shown before the tasks.
+     * @param tasks Tasks to include.
+     * @return Numbered task message.
+     */
+    private String getNumberedTasksMessage(String heading, TaskList tasks) {
+        StringBuilder message = new StringBuilder(heading);
         for (int i = 0; i < tasks.size(); i++) {
-            System.out.println(INDENTATION + (i + 1) + ". " + tasks.get(i));
+            message.append(System.lineSeparator())
+                    .append(i + 1)
+                    .append(". ")
+                    .append(tasks.get(i));
         }
+        return message.toString();
     }
 
     /**
-     * Displays a successful mark message.
+     * Returns a successful mark message.
+     *
+     * @return Mark confirmation.
      */
-    public void showTaskMarked() {
-        System.out.println(INDENTATION + "Nice! I've marked this task as done.");
+    public String getTaskMarkedMessage() {
+        return "Nice! I've marked this task as done.";
     }
 
     /**
-     * Displays a successful unmark message.
+     * Returns a successful unmark message.
+     *
+     * @return Unmark confirmation.
      */
-    public void showTaskUnmarked() {
-        System.out.println(INDENTATION + "Nice! I've marked this task as undone.");
+    public String getTaskUnmarkedMessage() {
+        return "Nice! I've marked this task as undone.";
     }
 
     /**
-     * Displays a successful deletion message.
+     * Returns a successful deletion message.
+     *
+     * @return Deletion confirmation.
      */
-    public void showTaskDeleted() {
-        System.out.println(INDENTATION + "Noted. I've removed this task:");
+    public String getTaskDeletedMessage() {
+        return "Noted. I've removed this task:";
     }
 
     /**
-     * Displays a successful task addition message.
+     * Returns a successful task addition message.
+     *
+     * @return Addition confirmation.
      */
-    public void showTaskAdded() {
-        System.out.println(INDENTATION + "Got it. I've added this task.");
+    public String getTaskAddedMessage() {
+        return "Got it. I've added this task.";
     }
 
     /**
@@ -140,7 +175,17 @@ public class UI {
      * @param message Explanation of the error.
      */
     public void showError(String message) {
-        System.out.println(INDENTATION + "OOPS! " + message);
+        showResponse(getErrorMessage(message));
+    }
+
+    /**
+     * Returns a user-facing error message.
+     *
+     * @param message Explanation of the error.
+     * @return Formatted error message.
+     */
+    public String getErrorMessage(String message) {
+        return "OOPS! " + message;
     }
 
     /**

@@ -101,6 +101,8 @@ public class Ollie {
      * @throws OllieException If the command is invalid or its action fails.
      */
     private CommandResult handleCommand(String command) throws OllieException {
+        assert tasks != null : "Tasks should be loaded before handling commands";
+
         CommandType commandType = parser.parseCommand(command);
 
         switch (commandType) {

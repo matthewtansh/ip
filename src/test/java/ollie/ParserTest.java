@@ -32,7 +32,7 @@ public class ParserTest {
 
         Deadline deadline = assertInstanceOf(Deadline.class, task);
         assertEquals("return book", deadline.getDescription());
-        assertEquals(LocalDate.of(2019, 12, 2), deadline.getBy());
+        assertEquals(LocalDate.of(2019, 12, 2), deadline.getDueDate());
     }
 
     @Test
@@ -41,8 +41,8 @@ public class ParserTest {
 
         Event event = assertInstanceOf(Event.class, task);
         assertEquals("meeting", event.getDescription());
-        assertEquals(LocalDate.of(2019, 12, 3), event.getFrom());
-        assertEquals(LocalDate.of(2019, 12, 5), event.getTo());
+        assertEquals(LocalDate.of(2019, 12, 3), event.getStartDate());
+        assertEquals(LocalDate.of(2019, 12, 5), event.getEndDate());
     }
 
     @Test

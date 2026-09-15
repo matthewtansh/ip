@@ -6,7 +6,8 @@ import java.util.Scanner;
  * Handles console input and output for Ollie.
  */
 public class UI {
-    private static final String HORIZONTAL_LINE = "------------------------------------------------------------";
+    private static final int HORIZONTAL_LINE_LENGTH = 60;
+    private static final String HORIZONTAL_LINE = "-".repeat(HORIZONTAL_LINE_LENGTH);
     private static final String INDENTATION = "    ";
 
     private final Scanner scanner;

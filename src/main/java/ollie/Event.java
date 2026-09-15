@@ -8,22 +8,23 @@ import java.util.Locale;
  * Represents a task that takes place between two dates.
  */
 public class Event extends Task {
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM d yyyy", Locale.ENGLISH);
 
-    private final LocalDate from;
-    private final LocalDate to;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
 
     /**
      * Creates an event with the given description, start date, and end date.
      *
      * @param description Description of the event.
-     * @param from Date on which the event starts.
-     * @param to Date on which the event ends.
+     * @param startDate Date on which the event starts.
+     * @param endDate Date on which the event ends.
      */
-    public Event(String description, LocalDate from, LocalDate to) {
+    public Event(String description, LocalDate startDate, LocalDate endDate) {
         super(description);
-        this.from = from;
-        this.to = to;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     /**
@@ -31,8 +32,8 @@ public class Event extends Task {
      *
      * @return Start date of this event.
      */
-    public LocalDate getFrom() {
-        return from;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
     /**
@@ -40,8 +41,8 @@ public class Event extends Task {
      *
      * @return End date of this event.
      */
-    public LocalDate getTo() {
-        return to;
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
     /**
@@ -51,7 +52,8 @@ public class Event extends Task {
      */
     @Override
     public String toString() {
-        return "[event]" + super.toString() + " (from: " + from.format(DATE_FORMATTER)
-                + " to: " + to.format(DATE_FORMATTER) + ")";
+        return "[event]" + super.toString()
+                + " (from: " + startDate.format(DATE_FORMATTER)
+                + " to: " + endDate.format(DATE_FORMATTER) + ")";
     }
 }

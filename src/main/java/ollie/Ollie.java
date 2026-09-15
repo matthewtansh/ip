@@ -96,10 +96,7 @@ public class Ollie {
                 saveTasks();
                 ui.showTaskDeleted();
                 break;
-            case TODO:
-            case DEADLINE:
-            case EVENT:
-            case UNKNOWN:
+            case TODO, DEADLINE, EVENT, UNKNOWN:
                 addTask(parser.parseTask(command));
                 break;
             default:

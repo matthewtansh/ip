@@ -39,7 +39,7 @@ public class Storage {
         }
 
         try {
-            ArrayList<Task> tasks = new ArrayList<>();
+            List<Task> tasks = new ArrayList<>();
             List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
             for (int i = 0; i < lines.size(); i++) {
                 if (!lines.get(i).isBlank()) {
@@ -89,11 +89,11 @@ public class Storage {
         } else if (task instanceof Deadline) {
             Deadline deadline = (Deadline) task;
             return String.join(FIELD_SEPARATOR, "D", status, deadline.getDescription(),
-                    deadline.getBy().toString());
+                    deadline.getDueDate().toString());
         } else if (task instanceof Event) {
             Event event = (Event) task;
             return String.join(FIELD_SEPARATOR, "E", status, event.getDescription(),
-                    event.getFrom().toString(), event.getTo().toString());
+                    event.getStartDate().toString(), event.getEndDate().toString());
         }
 
         throw new OllieException("I couldn't save an unsupported task type.");

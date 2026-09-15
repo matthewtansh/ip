@@ -57,7 +57,8 @@ public class Parser {
     public int parseTaskIndex(String command, String action, int taskCount) throws OllieException {
         String taskNumberText = command.substring(action.length()).trim();
         if (taskNumberText.isEmpty()) {
-            throw new OllieException("Tell me which task to " + action + ". Try: " + action + " <task number>.");
+            throw new OllieException("Tell me which task to " + action
+                    + ". Try: " + action + " <task number>.");
         }
 
         int taskNumber;
@@ -123,22 +124,22 @@ public class Parser {
      */
     private Deadline createDeadline(String command) throws OllieException {
         String details = command.substring("deadline".length()).trim();
-        int byIndex = details.indexOf("/by");
+        int dueDateDelimiterIndex = details.indexOf("/by");
 
-        if (byIndex < 0) {
+        if (dueDateDelimiterIndex < 0) {
             throw new OllieException("A deadline needs /by followed by a date.");
         }
 
-        String description = details.substring(0, byIndex).trim();
-        String byText = details.substring(byIndex + "/by".length()).trim();
+        String description = details.substring(0, dueDateDelimiterIndex).trim();
+        String dueDateText = details.substring(dueDateDelimiterIndex + "/by".length()).trim();
         if (description.isEmpty()) {
             throw new OllieException("A deadline needs a description before /by.");
-        } else if (byText.isEmpty()) {
+        } else if (dueDateText.isEmpty()) {
             throw new OllieException("A deadline needs a date after /by.");
         }
 
-        LocalDate by = parseDate(byText, "deadline date");
-        return new Deadline(description, by);
+        LocalDate dueDate = parseDate(dueDateText, "deadline date");
+        return new Deadline(description, dueDate);
     }
 
     /**
@@ -150,29 +151,32 @@ public class Parser {
      */
     private Event createEvent(String command) throws OllieException {
         String details = command.substring("event".length()).trim();
-        int fromIndex = details.indexOf("/from");
-        int toIndex = fromIndex < 0 ? -1 : details.indexOf("/to", fromIndex + "/from".length());
+        int startDateDelimiterIndex = details.indexOf("/from");
+        int endDateDelimiterIndex = startDateDelimiterIndex < 0
+                ? -1
+                : details.indexOf("/to", startDateDelimiterIndex + "/from".length());
 
-        if (fromIndex < 0) {
+        if (startDateDelimiterIndex < 0) {
             throw new OllieException("An event needs /from followed by a start date.");
-        } else if (toIndex < 0) {
+        } else if (endDateDelimiterIndex < 0) {
             throw new OllieException("An event needs /to followed by an end date.");
         }
 
-        String description = details.substring(0, fromIndex).trim();
-        String fromText = details.substring(fromIndex + "/from".length(), toIndex).trim();
-        String toText = details.substring(toIndex + "/to".length()).trim();
+        String description = details.substring(0, startDateDelimiterIndex).trim();
+        String startDateText = details.substring(
+                startDateDelimiterIndex + "/from".length(), endDateDelimiterIndex).trim();
+        String endDateText = details.substring(endDateDelimiterIndex + "/to".length()).trim();
         if (description.isEmpty()) {
             throw new OllieException("An event needs a description before /from.");
-        } else if (fromText.isEmpty()) {
+        } else if (startDateText.isEmpty()) {
             throw new OllieException("An event needs a start date after /from.");
-        } else if (toText.isEmpty()) {
+        } else if (endDateText.isEmpty()) {
             throw new OllieException("An event needs an end date after /to.");
         }
 
-        LocalDate from = parseDate(fromText, "event start date");
-        LocalDate to = parseDate(toText, "event end date");
-        return new Event(description, from, to);
+        LocalDate startDate = parseDate(startDateText, "event start date");
+        LocalDate endDate = parseDate(endDateText, "event end date");
+        return new Event(description, startDate, endDate);
     }
 
     /**
@@ -187,7 +191,8 @@ public class Parser {
         try {
             return LocalDate.parse(dateText);
         } catch (DateTimeParseException e) {
-            throw new OllieException("The " + dateDescription + " must use yyyy-MM-dd format, e.g., 2019-12-02.");
+            throw new OllieException("The " + dateDescription
+                    + " must use yyyy-MM-dd format, e.g., 2019-12-02.");
         }
     }
 }

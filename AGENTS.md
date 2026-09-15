@@ -30,6 +30,7 @@ Ensure that Java 25 is used when running the application or build tasks. On macO
 ## Required project skills
 
 - Use `.agents/skills/seedu-java-coding-standard/SKILL.md` for every Java source or test edit and review.
+- Use `.agents/skills/seedu-git-standard/SKILL.md` for every branch name and commit message proposal or creation.
 
 ## Git
 

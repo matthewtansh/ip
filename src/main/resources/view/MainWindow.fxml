@@ -8,22 +8,24 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="640.0" prefWidth="520.0"
+<BorderPane prefHeight="640.0" prefWidth="540.0"
             stylesheets="@styles.css"
             xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ollie.MainWindow">
     <center>
-        <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER">
+        <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED">
             <content>
-                <VBox fx:id="dialogContainer" spacing="8.0" styleClass="dialog-container" />
+                <VBox fx:id="dialogContainer" fillWidth="true" spacing="6.0"
+                      styleClass="dialog-container" />
             </content>
         </ScrollPane>
     </center>
     <bottom>
         <HBox spacing="8.0" styleClass="input-bar">
             <padding>
-                <Insets bottom="12.0" left="12.0" right="12.0" top="12.0" />
+                <Insets bottom="10.0" left="12.0" right="12.0" top="10.0" />
             </padding>
             <TextField fx:id="userInput" HBox.hgrow="ALWAYS"
                        onAction="#handleUserInput"

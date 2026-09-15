@@ -1,7 +1,7 @@
 .root {
-    -fx-background-color: #f5f7fb;
+    -fx-background-color: #f6f7fb;
     -fx-font-family: "Segoe UI";
-    -fx-font-size: 14px;
+    -fx-font-size: 13.5px;
 }
 
 .scroll-pane,
@@ -9,27 +9,57 @@
     -fx-background-color: transparent;
 }
 
+.scroll-pane {
+    -fx-padding: 0;
+}
+
 .dialog-container {
-    -fx-padding: 12px 4px;
+    -fx-padding: 12px 14px;
+}
+
+.dialog-row {
+    -fx-padding: 2px 0 4px 0;
 }
 
 .dialog-message {
-    -fx-background-radius: 12px;
-    -fx-padding: 10px 12px;
+    -fx-line-spacing: 1px;
+    -fx-padding: 9px 11px;
 }
 
 .user-dialog .dialog-message {
-    -fx-background-color: #dbeafe;
+    -fx-background-color: #2563eb;
+    -fx-background-radius: 14px 14px 4px 14px;
+    -fx-text-fill: white;
 }
 
 .ollie-dialog .dialog-message {
-    -fx-background-color: #e5e7eb;
+    -fx-background-color: white;
+    -fx-background-radius: 4px 12px 12px 12px;
+    -fx-border-color: transparent transparent transparent #7c3aed;
+    -fx-border-radius: 4px 12px 12px 12px;
+    -fx-border-width: 0 0 0 3px;
+    -fx-effect: dropshadow(gaussian, rgba(30, 41, 59, 0.08), 8, 0, 0, 2);
+    -fx-text-fill: #1e293b;
+}
+
+.error-dialog .dialog-message {
+    -fx-background-color: #fff1f2;
+    -fx-background-radius: 4px 12px 12px 12px;
+    -fx-border-color: transparent transparent transparent #e11d48;
+    -fx-border-radius: 4px 12px 12px 12px;
+    -fx-border-width: 0 0 0 3px;
+    -fx-text-fill: #9f1239;
 }
 
 .speaker-label {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-padding: 8px 4px;
+    -fx-padding: 0 0 0 4px;
+    -fx-text-fill: #6d28d9;
+}
+
+.error-dialog .speaker-label {
+    -fx-text-fill: #be123c;
 }
 
 .input-bar {
@@ -37,8 +67,36 @@
     -fx-border-color: #d1d5db transparent transparent transparent;
 }
 
+.text-field {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 9px;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 9px;
+    -fx-padding: 9px 11px;
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+.text-field:focused {
+    -fx-background-color: white;
+    -fx-border-color: #7c3aed;
+}
+
 .button {
-    -fx-background-color: #2563eb;
-    -fx-background-radius: 8px;
+    -fx-background-color: #6d28d9;
+    -fx-background-radius: 9px;
+    -fx-font-weight: bold;
+    -fx-padding: 9px 14px;
     -fx-text-fill: white;
+}
+
+.button:hover {
+    -fx-background-color: #5b21b6;
+}
+
+.button:pressed {
+    -fx-background-color: #4c1d95;
+}
+
+.button:disabled {
+    -fx-opacity: 0.55;
 }

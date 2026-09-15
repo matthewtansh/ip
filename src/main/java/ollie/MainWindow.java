@@ -49,13 +49,16 @@ public class MainWindow {
             return;
         }
 
-        String response = ollie.getResponse(input);
+        Ollie.CommandResponse commandResponse = ollie.getCommandResponse(input);
+        DialogBox responseDialog = commandResponse.isError()
+                ? DialogBox.getErrorDialog(commandResponse.message())
+                : DialogBox.getOllieDialog(commandResponse.message());
         dialogContainer.getChildren().addAll(
                 DialogBox.getUserDialog(input),
-                DialogBox.getOllieDialog(response));
+                responseDialog);
         userInput.clear();
 
-        if (ollie.isExitCommand(input)) {
+        if (commandResponse.isExit()) {
             userInput.setDisable(true);
             sendButton.setDisable(true);
         }

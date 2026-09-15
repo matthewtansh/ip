@@ -57,11 +57,22 @@ public class Ollie {
      * @return User-facing response to the command.
      */
     public String getResponse(String command) {
+        return getCommandResponse(command).message();
+    }
+
+    /**
+     * Processes a command and reports the response state needed by a graphical interface.
+     *
+     * @param command Command entered by the user.
+     * @return Response text together with its exit and error states.
+     */
+    public CommandResponse getCommandResponse(String command) {
         ensureTasksLoaded();
         try {
-            return handleCommand(command.trim()).response();
+            CommandResult result = handleCommand(command.trim());
+            return new CommandResponse(result.response(), result.isExit(), false);
         } catch (OllieException e) {
-            return ui.getErrorMessage(e.getMessage());
+            return new CommandResponse(ui.getErrorMessage(e.getMessage()), false, true);
         }
     }
 
@@ -179,6 +190,16 @@ public class Ollie {
      */
     private void saveTasks() throws OllieException {
         storage.save(tasks.getTasks());
+    }
+
+    /**
+     * Contains a response and the state needed to display it in the GUI.
+     *
+     * @param message User-facing response.
+     * @param isExit Whether the command ends the session.
+     * @param isError Whether the response describes an error.
+     */
+    public record CommandResponse(String message, boolean isExit, boolean isError) {
     }
 
     /**

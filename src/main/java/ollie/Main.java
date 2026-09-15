@@ -13,7 +13,9 @@ import javafx.stage.Stage;
  */
 public class Main extends Application {
     private static final double WINDOW_HEIGHT = 640.0;
-    private static final double WINDOW_WIDTH = 520.0;
+    private static final double WINDOW_WIDTH = 540.0;
+    private static final double MINIMUM_WINDOW_HEIGHT = 420.0;
+    private static final double MINIMUM_WINDOW_WIDTH = 360.0;
 
     private final Ollie ollie = Ollie.createDefault();
 
@@ -26,8 +28,11 @@ public class Main extends Application {
 
         stage.setScene(new Scene(root));
         stage.setTitle("Ollie");
-        stage.setMinHeight(WINDOW_HEIGHT);
-        stage.setMinWidth(WINDOW_WIDTH);
+        stage.setHeight(WINDOW_HEIGHT);
+        stage.setWidth(WINDOW_WIDTH);
+        stage.setMinHeight(MINIMUM_WINDOW_HEIGHT);
+        stage.setMinWidth(MINIMUM_WINDOW_WIDTH);
+        stage.setResizable(true);
         stage.show();
     }
 }

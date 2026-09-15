@@ -25,7 +25,11 @@ public class OllieTest {
     public void getResponse_invalidCommand_returnsErrorResponse() {
         Ollie ollie = new Ollie(tempDirectory.resolve("tasks.txt"));
 
-        assertTrue(ollie.getResponse("unknown").contains("OOPS!"));
+        Ollie.CommandResponse response = ollie.getCommandResponse("unknown");
+
+        assertTrue(response.message().contains("OOPS!"));
+        assertTrue(response.isError());
+        assertFalse(response.isExit());
     }
 
     @Test

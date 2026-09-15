@@ -30,8 +30,12 @@ public class TaskList {
      * Adds a task to the end of the list.
      *
      * @param task Task to add.
+     * @throws OllieException If an equivalent task is already stored.
      */
-    public void add(Task task) {
+    public void add(Task task) throws OllieException {
+        if (tasks.stream().anyMatch(task::hasSameDetails)) {
+            throw new OllieException("That task is already in your list.");
+        }
         tasks.add(task);
     }
 

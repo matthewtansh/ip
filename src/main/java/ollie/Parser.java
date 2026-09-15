@@ -2,11 +2,19 @@ package ollie;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Interprets user input and converts it into commands and tasks.
  */
 public class Parser {
+    private static final Pattern POSITIVE_INTEGER_PATTERN = Pattern.compile("[1-9]\\d*");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    private static final String BY_PARAMETER = "/by";
+    private static final String FROM_PARAMETER = "/from";
+    private static final String TO_PARAMETER = "/to";
+
     /**
      * Creates a parser for Ollie commands.
      */
@@ -20,7 +28,12 @@ public class Parser {
      * @return Type of the command, or {@link CommandType#UNKNOWN} if it is not recognized.
      */
     public CommandType parseCommand(String input) {
-        String commandWord = input.split(" ", 2)[0];
+        String normalizedInput = normalizeWhitespace(input);
+        if (normalizedInput.isEmpty()) {
+            return CommandType.UNKNOWN;
+        }
+
+        String commandWord = normalizedInput.split(" ", 2)[0];
         switch (commandWord) {
             case "help":
                 return CommandType.HELP;
@@ -55,7 +68,12 @@ public class Parser {
      * @throws OllieException If the keyword is empty.
      */
     public String parseFindKeyword(String command) throws OllieException {
-        String keyword = command.substring("find".length()).trim();
+        String normalizedCommand = normalizeWhitespace(command);
+        if (!normalizedCommand.equals("find") && !normalizedCommand.startsWith("find ")) {
+            throw new OllieException("Use find <keyword> to search for tasks.");
+        }
+
+        String keyword = normalizedCommand.substring("find".length()).trim();
         if (keyword.isEmpty()) {
             throw new OllieException("Tell me what to find. Try: find <keyword>.");
         }
@@ -73,17 +91,26 @@ public class Parser {
      * @throws OllieException If the task number is missing, invalid, or out of range.
      */
     public int parseTaskIndex(String command, String action, int taskCount) throws OllieException {
-        String taskNumberText = command.substring(action.length()).trim();
+        String normalizedCommand = normalizeWhitespace(command);
+        if (!normalizedCommand.equals(action) && !normalizedCommand.startsWith(action + " ")) {
+            throw new OllieException("Use " + action + " <task number>.");
+        }
+
+        String taskNumberText = normalizedCommand.substring(action.length()).trim();
         if (taskNumberText.isEmpty()) {
             throw new OllieException("Tell me which task to " + action
                     + ". Try: " + action + " <task number>.");
+        }
+
+        if (!POSITIVE_INTEGER_PATTERN.matcher(taskNumberText).matches()) {
+            throw new OllieException("The task number must be a positive whole number.");
         }
 
         int taskNumber;
         try {
             taskNumber = Integer.parseInt(taskNumberText);
         } catch (NumberFormatException e) {
-            throw new OllieException("The task number must be a whole number.");
+            throw new OllieException("That task number is too large.");
         }
 
         if (taskCount == 0) {
@@ -103,14 +130,15 @@ public class Parser {
      * @throws OllieException If the command is unknown or incomplete.
      */
     public Task parseTask(String command) throws OllieException {
-        CommandType commandType = parseCommand(command);
+        String normalizedCommand = normalizeWhitespace(command);
+        CommandType commandType = parseCommand(normalizedCommand);
         if (commandType == CommandType.TODO) {
-            return createTodo(command);
+            return createTodo(normalizedCommand);
         } else if (commandType == CommandType.DEADLINE) {
-            return createDeadline(command);
+            return createDeadline(normalizedCommand);
         } else if (commandType == CommandType.EVENT) {
-            return createEvent(command);
-        } else if (command.isEmpty()) {
+            return createEvent(normalizedCommand);
+        } else if (normalizedCommand.isEmpty()) {
             throw new OllieException("Please enter a command. Type help to see the available commands.");
         }
 
@@ -130,6 +158,7 @@ public class Parser {
             throw new OllieException("A todo needs a description. Try: todo <description>.");
         }
 
+        validateDescription(description);
         return new Todo(description);
     }
 
@@ -142,20 +171,26 @@ public class Parser {
      */
     private Deadline createDeadline(String command) throws OllieException {
         String details = command.substring("deadline".length()).trim();
-        int dueDateDelimiterIndex = details.indexOf("/by");
+        int byParameterCount = countParameter(details, BY_PARAMETER);
 
-        if (dueDateDelimiterIndex < 0) {
+        if (containsParameter(details, FROM_PARAMETER) || containsParameter(details, TO_PARAMETER)) {
+            throw new OllieException("A deadline only accepts the /by parameter.");
+        } else if (byParameterCount == 0) {
             throw new OllieException("A deadline needs /by followed by a date.");
+        } else if (byParameterCount > 1) {
+            throw new OllieException("Specify /by only once for a deadline.");
         }
 
+        int dueDateDelimiterIndex = findParameterIndex(details, BY_PARAMETER);
         String description = details.substring(0, dueDateDelimiterIndex).trim();
-        String dueDateText = details.substring(dueDateDelimiterIndex + "/by".length()).trim();
+        String dueDateText = details.substring(dueDateDelimiterIndex + BY_PARAMETER.length()).trim();
         if (description.isEmpty()) {
             throw new OllieException("A deadline needs a description before /by.");
         } else if (dueDateText.isEmpty()) {
             throw new OllieException("A deadline needs a date after /by.");
         }
 
+        validateDescription(description);
         LocalDate dueDate = parseDate(dueDateText, "deadline date");
         return new Deadline(description, dueDate);
     }
@@ -169,21 +204,31 @@ public class Parser {
      */
     private Event createEvent(String command) throws OllieException {
         String details = command.substring("event".length()).trim();
-        int startDateDelimiterIndex = details.indexOf("/from");
-        int endDateDelimiterIndex = startDateDelimiterIndex < 0
-                ? -1
-                : details.indexOf("/to", startDateDelimiterIndex + "/from".length());
+        int fromParameterCount = countParameter(details, FROM_PARAMETER);
+        int toParameterCount = countParameter(details, TO_PARAMETER);
 
-        if (startDateDelimiterIndex < 0) {
+        if (containsParameter(details, BY_PARAMETER)) {
+            throw new OllieException("An event only accepts /from and /to parameters.");
+        } else if (fromParameterCount == 0) {
             throw new OllieException("An event needs /from followed by a start date.");
-        } else if (endDateDelimiterIndex < 0) {
+        } else if (fromParameterCount > 1) {
+            throw new OllieException("Specify /from only once for an event.");
+        } else if (toParameterCount == 0) {
             throw new OllieException("An event needs /to followed by an end date.");
+        } else if (toParameterCount > 1) {
+            throw new OllieException("Specify /to only once for an event.");
+        }
+
+        int startDateDelimiterIndex = findParameterIndex(details, FROM_PARAMETER);
+        int endDateDelimiterIndex = findParameterIndex(details, TO_PARAMETER);
+        if (endDateDelimiterIndex < startDateDelimiterIndex) {
+            throw new OllieException("Place /from before /to in an event.");
         }
 
         String description = details.substring(0, startDateDelimiterIndex).trim();
         String startDateText = details.substring(
-                startDateDelimiterIndex + "/from".length(), endDateDelimiterIndex).trim();
-        String endDateText = details.substring(endDateDelimiterIndex + "/to".length()).trim();
+                startDateDelimiterIndex + FROM_PARAMETER.length(), endDateDelimiterIndex).trim();
+        String endDateText = details.substring(endDateDelimiterIndex + TO_PARAMETER.length()).trim();
         if (description.isEmpty()) {
             throw new OllieException("An event needs a description before /from.");
         } else if (startDateText.isEmpty()) {
@@ -192,9 +237,27 @@ public class Parser {
             throw new OllieException("An event needs an end date after /to.");
         }
 
+        validateDescription(description);
         LocalDate startDate = parseDate(startDateText, "event start date");
         LocalDate endDate = parseDate(endDateText, "event end date");
+        if (!startDate.isBefore(endDate)) {
+            throw new OllieException("The event start date must be before its end date.");
+        }
+
         return new Event(description, startDate, endDate);
+    }
+
+    /**
+     * Ensures a command that takes no arguments contains only its command word.
+     *
+     * @param command Full command entered by the user.
+     * @param commandWord Command word that should appear alone.
+     * @throws OllieException If unexpected arguments follow the command word.
+     */
+    public void validateNoArguments(String command, String commandWord) throws OllieException {
+        if (!normalizeWhitespace(command).equals(commandWord)) {
+            throw new OllieException("The " + commandWord + " command does not take any arguments.");
+        }
     }
 
     /**
@@ -209,8 +272,44 @@ public class Parser {
         try {
             return LocalDate.parse(dateText);
         } catch (DateTimeParseException e) {
-            throw new OllieException("The " + dateDescription
-                    + " must use yyyy-MM-dd format, e.g., 2019-12-02.");
+            throw new OllieException("The " + dateDescription + " must be a real date in "
+                    + "yyyy-MM-dd format, e.g., 2019-12-02.");
         }
+    }
+
+    private void validateDescription(String description) throws OllieException {
+        if (description.contains("|")) {
+            throw new OllieException("Task descriptions cannot contain the | character.");
+        }
+    }
+
+    private boolean containsParameter(String details, String parameter) {
+        return countParameter(details, parameter) > 0;
+    }
+
+    private int countParameter(String details, String parameter) {
+        int count = 0;
+        Matcher matcher = createParameterPattern(parameter).matcher(details);
+        while (matcher.find()) {
+            count++;
+        }
+        return count;
+    }
+
+    private int findParameterIndex(String details, String parameter) {
+        Matcher matcher = createParameterPattern(parameter).matcher(details);
+        assert matcher.find() : "Required parameter should be present before locating it";
+        return matcher.start();
+    }
+
+    private Pattern createParameterPattern(String parameter) {
+        return Pattern.compile("(?<!\\S)" + Pattern.quote(parameter) + "(?!\\S)");
+    }
+
+    private String normalizeWhitespace(String input) {
+        if (input == null) {
+            return "";
+        }
+        return WHITESPACE_PATTERN.matcher(input.trim()).replaceAll(" ");
     }
 }

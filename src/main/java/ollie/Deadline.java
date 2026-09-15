@@ -34,6 +34,18 @@ public class Deadline extends Task {
     }
 
     /**
+     * Returns whether another task has the same deadline details.
+     *
+     * @param other Task to compare with this deadline.
+     * @return True if both deadlines have the same description and due date.
+     */
+    @Override
+    public boolean hasSameDetails(Task other) {
+        return super.hasSameDetails(other)
+                && dueDate.equals(((Deadline) other).dueDate);
+    }
+
+    /**
      * Returns a display-friendly representation of this deadline.
      *
      * @return Formatted deadline.

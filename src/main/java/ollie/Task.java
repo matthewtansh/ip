@@ -1,5 +1,7 @@
 package ollie;
 
+import java.util.Locale;
+
 /**
  * Represents a task with a description and completion status.
  */
@@ -52,6 +54,19 @@ public class Task {
     }
 
     /**
+     * Returns whether another task has the same type and description.
+     * Completion status is deliberately ignored when identifying duplicates.
+     *
+     * @param other Task to compare with this task.
+     * @return True if both tasks represent the same task details.
+     */
+    public boolean hasSameDetails(Task other) {
+        return other != null
+                && getClass().equals(other.getClass())
+                && normalizeDescription(description).equals(normalizeDescription(other.description));
+    }
+
+    /**
      * Returns the completion status and description of this task.
      *
      * @return Formatted task.
@@ -59,5 +74,9 @@ public class Task {
     @Override
     public String toString() {
         return "[" + (isDone ? "X" : " ") + "] " + description;
+    }
+
+    private String normalizeDescription(String text) {
+        return text.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 }

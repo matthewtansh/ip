@@ -39,4 +39,16 @@ public class TaskListTest {
 
         assertThrows(AssertionError.class, () -> tasks.mark(1));
     }
+
+    @Test
+    public void add_duplicateTask_throwsOllieException() throws OllieException {
+        TaskList tasks = new TaskList(List.of(new Todo("Read  Book")));
+
+        assertThrows(OllieException.class, () -> tasks.add(new Todo("read book")));
+        tasks.add(new Deadline("read book", LocalDate.of(2019, 12, 2)));
+        Deadline duplicateDeadline = new Deadline("READ BOOK", LocalDate.of(2019, 12, 2));
+        assertThrows(OllieException.class, () -> tasks.add(duplicateDeadline));
+
+        assertEquals(2, tasks.size());
+    }
 }

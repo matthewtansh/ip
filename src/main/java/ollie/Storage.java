@@ -48,21 +48,30 @@ public class Storage {
      * @throws OllieException If the file cannot be read or contains invalid task data.
      */
     public List<Task> load() throws OllieException {
-        if (!Files.exists(filePath)) {
-            return new ArrayList<>();
-        }
-
         try {
+            if (!Files.exists(filePath)) {
+                return new ArrayList<>();
+            } else if (Files.isDirectory(filePath)) {
+                throw new OllieException("The task data path points to a folder instead of a file: "
+                        + filePath + ".");
+            }
+
             List<Task> tasks = new ArrayList<>();
             List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
             for (int i = 0; i < lines.size(); i++) {
                 if (!lines.get(i).isBlank()) {
-                    tasks.add(parseTask(lines.get(i), i + 1));
+                    Task task = parseTask(lines.get(i), i + 1);
+                    if (tasks.stream().anyMatch(task::hasSameDetails)) {
+                        throw new OllieException("The saved task on line " + (i + 1)
+                                + " duplicates an earlier task.");
+                    }
+                    tasks.add(task);
                 }
             }
             return tasks;
-        } catch (IOException e) {
-            throw new OllieException("I couldn't load your tasks from " + filePath + ".");
+        } catch (IOException | SecurityException e) {
+            throw new OllieException("I couldn't read the task file at " + filePath
+                    + ". Check that the file is accessible.");
         }
     }
 
@@ -74,18 +83,29 @@ public class Storage {
      */
     public void save(List<Task> tasks) throws OllieException {
         try {
+            if (Files.isDirectory(filePath)) {
+                throw new OllieException("The task data path points to a folder instead of a file: "
+                        + filePath + ".");
+            }
+
             Path parentDirectory = filePath.getParent();
             if (parentDirectory != null) {
                 Files.createDirectories(parentDirectory);
             }
 
             List<String> lines = new ArrayList<>();
-            for (Task task : tasks) {
+            for (int i = 0; i < tasks.size(); i++) {
+                Task task = tasks.get(i);
+                if (task == null) {
+                    throw new OllieException("I couldn't save an empty task entry.");
+                }
+                ensureTaskIsUnique(tasks, task, i);
                 lines.add(formatTask(task));
             }
             Files.write(filePath, lines, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new OllieException("I couldn't save your tasks to " + filePath + ".");
+        } catch (IOException | SecurityException e) {
+            throw new OllieException("I couldn't write the task file at " + filePath
+                    + ". Check that its folder is accessible and writable.");
         }
     }
 
@@ -97,15 +117,23 @@ public class Storage {
      * @throws OllieException If the task type is unsupported.
      */
     private String formatTask(Task task) throws OllieException {
+        validateStoredDescription(task.getDescription());
         String status = task.isDone() ? DONE_STATUS : NOT_DONE_STATUS;
         if (task instanceof Todo) {
             return String.join(FIELD_SEPARATOR, TODO_TYPE, status, task.getDescription());
         } else if (task instanceof Deadline) {
             Deadline deadline = (Deadline) task;
+            if (deadline.getDueDate() == null) {
+                throw new OllieException("I couldn't save a deadline without a due date.");
+            }
             return String.join(FIELD_SEPARATOR, DEADLINE_TYPE, status, deadline.getDescription(),
                     deadline.getDueDate().toString());
         } else if (task instanceof Event) {
             Event event = (Event) task;
+            if (event.getStartDate() == null || event.getEndDate() == null
+                    || !event.getStartDate().isBefore(event.getEndDate())) {
+                throw new OllieException("I couldn't save an event with an invalid date range.");
+            }
             return String.join(FIELD_SEPARATOR, EVENT_TYPE, status, event.getDescription(),
                     event.getStartDate().toString(), event.getEndDate().toString());
         }
@@ -123,7 +151,9 @@ public class Storage {
      */
     private Task parseTask(String line, int lineNumber) throws OllieException {
         String[] fields = line.split(FIELD_SEPARATOR_REGEX, -1);
-        if (fields.length < TODO_FIELD_COUNT || fields[DESCRIPTION_FIELD_INDEX].isBlank()) {
+        if (fields.length < TODO_FIELD_COUNT
+                || fields[DESCRIPTION_FIELD_INDEX].isBlank()
+                || fields[DESCRIPTION_FIELD_INDEX].contains("|")) {
             throw invalidData(lineNumber);
         }
 
@@ -183,9 +213,12 @@ public class Storage {
         if (fields[DATE_FIELD_INDEX].isBlank() || fields[END_DATE_FIELD_INDEX].isBlank()) {
             throw invalidData(lineNumber);
         }
-        return new Event(fields[DESCRIPTION_FIELD_INDEX],
-                parseDate(fields[DATE_FIELD_INDEX], lineNumber),
-                parseDate(fields[END_DATE_FIELD_INDEX], lineNumber));
+        LocalDate startDate = parseDate(fields[DATE_FIELD_INDEX], lineNumber);
+        LocalDate endDate = parseDate(fields[END_DATE_FIELD_INDEX], lineNumber);
+        if (!startDate.isBefore(endDate)) {
+            throw invalidData(lineNumber);
+        }
+        return new Event(fields[DESCRIPTION_FIELD_INDEX], startDate, endDate);
     }
 
     /**
@@ -228,5 +261,22 @@ public class Storage {
      */
     private OllieException invalidData(int lineNumber) {
         return new OllieException("The saved task on line " + lineNumber + " is invalid.");
+    }
+
+    private void ensureTaskIsUnique(List<Task> tasks, Task task, int taskIndex) throws OllieException {
+        for (int i = 0; i < taskIndex; i++) {
+            if (task.hasSameDetails(tasks.get(i))) {
+                throw new OllieException("I couldn't save the same task more than once.");
+            }
+        }
+    }
+
+    private void validateStoredDescription(String description) throws OllieException {
+        if (description == null || description.isBlank()
+                || description.contains("|")
+                || description.contains("\n")
+                || description.contains("\r")) {
+            throw new OllieException("I couldn't save a task with an invalid description.");
+        }
     }
 }

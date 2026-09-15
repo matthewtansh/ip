@@ -3,7 +3,22 @@ package ollie;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
+/**
+ * Interprets user input and converts it into commands and tasks.
+ */
 public class Parser {
+    /**
+     * Creates a parser for Ollie commands.
+     */
+    public Parser() {
+    }
+
+    /**
+     * Identifies the type of command represented by the input.
+     *
+     * @param input Input entered by the user.
+     * @return Type of the command, or {@link CommandType#UNKNOWN} if it is not recognized.
+     */
     public CommandType parseCommand(String input) {
         String commandWord = input.split(" ", 2)[0];
         switch (commandWord) {
@@ -30,6 +45,15 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses and validates a one-based task number from a command.
+     *
+     * @param command Full command entered by the user.
+     * @param action Command word that precedes the task number.
+     * @param taskCount Number of tasks currently stored.
+     * @return Zero-based task index.
+     * @throws OllieException If the task number is missing, invalid, or out of range.
+     */
     public int parseTaskIndex(String command, String action, int taskCount) throws OllieException {
         String taskNumberText = command.substring(action.length()).trim();
         if (taskNumberText.isEmpty()) {
@@ -52,6 +76,13 @@ public class Parser {
         return taskNumber - 1;
     }
 
+    /**
+     * Parses a task-creation command into the corresponding task type.
+     *
+     * @param command Task-creation command entered by the user.
+     * @return Parsed task.
+     * @throws OllieException If the command is unknown or incomplete.
+     */
     public Task parseTask(String command) throws OllieException {
         CommandType commandType = parseCommand(command);
         if (commandType == CommandType.TODO) {
@@ -67,6 +98,13 @@ public class Parser {
         throw new OllieException("I don't recognize that command. Type help to see what I understand.");
     }
 
+    /**
+     * Creates a todo from a validated todo command.
+     *
+     * @param command Todo command entered by the user.
+     * @return Parsed todo.
+     * @throws OllieException If the description is empty.
+     */
     private Todo createTodo(String command) throws OllieException {
         String description = command.substring("todo".length()).trim();
         if (description.isEmpty()) {
@@ -76,6 +114,13 @@ public class Parser {
         return new Todo(description);
     }
 
+    /**
+     * Creates a deadline from a validated deadline command.
+     *
+     * @param command Deadline command entered by the user.
+     * @return Parsed deadline.
+     * @throws OllieException If required details are missing or invalid.
+     */
     private Deadline createDeadline(String command) throws OllieException {
         String details = command.substring("deadline".length()).trim();
         int byIndex = details.indexOf("/by");
@@ -96,6 +141,13 @@ public class Parser {
         return new Deadline(description, by);
     }
 
+    /**
+     * Creates an event from a validated event command.
+     *
+     * @param command Event command entered by the user.
+     * @return Parsed event.
+     * @throws OllieException If required details are missing or invalid.
+     */
     private Event createEvent(String command) throws OllieException {
         String details = command.substring("event".length()).trim();
         int fromIndex = details.indexOf("/from");
@@ -123,6 +175,14 @@ public class Parser {
         return new Event(description, from, to);
     }
 
+    /**
+     * Parses an ISO date and reports a user-friendly error if it is invalid.
+     *
+     * @param dateText Date text to parse.
+     * @param dateDescription Name of the date used in an error message.
+     * @return Parsed date.
+     * @throws OllieException If the date is not a valid ISO date.
+     */
     private LocalDate parseDate(String dateText, String dateDescription) throws OllieException {
         try {
             return LocalDate.parse(dateText);

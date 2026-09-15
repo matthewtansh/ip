@@ -5,28 +5,30 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class Event extends Task {
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM d yyyy", Locale.ENGLISH);
 
-    private final LocalDate from;
-    private final LocalDate to;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
 
-    public Event(String description, LocalDate from, LocalDate to) {
+    public Event(String description, LocalDate startDate, LocalDate endDate) {
         super(description);
-        this.from = from;
-        this.to = to;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
-    public LocalDate getFrom() {
-        return from;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    public LocalDate getTo() {
-        return to;
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
     @Override
     public String toString() {
-        return "[event]" + super.toString() + " (from: " + from.format(DATE_FORMATTER)
-                + " to: " + to.format(DATE_FORMATTER) + ")";
+        return "[event]" + super.toString()
+                + " (from: " + startDate.format(DATE_FORMATTER)
+                + " to: " + endDate.format(DATE_FORMATTER) + ")";
     }
 }

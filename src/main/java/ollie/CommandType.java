@@ -3,6 +3,7 @@ package ollie;
 public enum CommandType {
     HELP,
     LIST,
+    FIND,
     TODO,
     DEADLINE,
     EVENT,

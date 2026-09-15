@@ -39,6 +39,7 @@ public class UI {
     public void showHelp() {
         System.out.println(INDENTATION + "help");
         System.out.println(INDENTATION + "list");
+        System.out.println(INDENTATION + "find <keyword>");
         System.out.println(INDENTATION + "todo <description>");
         System.out.println(INDENTATION + "deadline <description> /by <yyyy-MM-dd>");
         System.out.println(INDENTATION + "event <description> /from <yyyy-MM-dd> /to <yyyy-MM-dd>");
@@ -50,6 +51,25 @@ public class UI {
 
     public void showTaskList(TaskList tasks) {
         System.out.println(INDENTATION + "Here are the tasks in your list:");
+        showNumberedTasks(tasks);
+    }
+
+    /**
+     * Displays tasks that match a search keyword.
+     *
+     * @param tasks Matching tasks to display.
+     */
+    public void showMatchingTasks(TaskList tasks) {
+        System.out.println(INDENTATION + "Here are the matching tasks in your list:");
+        showNumberedTasks(tasks);
+    }
+
+    /**
+     * Displays tasks with one-based numbering.
+     *
+     * @param tasks Tasks to display.
+     */
+    private void showNumberedTasks(TaskList tasks) {
         for (int i = 0; i < tasks.size(); i++) {
             System.out.println(INDENTATION + (i + 1) + ". " + tasks.get(i));
         }

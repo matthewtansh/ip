@@ -55,6 +55,10 @@ public class Ollie {
             case LIST:
                 ui.showTaskList(tasks);
                 break;
+            case FIND:
+                String keyword = parser.parseFindKeyword(command);
+                ui.showMatchingTasks(tasks.find(keyword));
+                break;
             case MARK:
                 int markIndex = parser.parseTaskIndex(command, "mark", tasks.size());
                 tasks.mark(markIndex);

@@ -1,6 +1,7 @@
 package ollie;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,5 +31,12 @@ public class TaskListTest {
         TaskList matchingTasks = tasks.find("meeting");
 
         assertEquals(0, matchingTasks.size());
+    }
+
+    @Test
+    public void mark_invalidIndex_throwsAssertionError() {
+        TaskList tasks = new TaskList(List.of(new Todo("read book")));
+
+        assertThrows(AssertionError.class, () -> tasks.mark(1));
     }
 }

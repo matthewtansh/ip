@@ -15,15 +15,22 @@ public class ParserTest {
     public void parseCommand_supportedAndUnknownCommands_returnsCorrectTypes() {
         assertEquals(CommandType.HELP, parser.parseCommand("help"));
         assertEquals(CommandType.LIST, parser.parseCommand("list"));
+        assertEquals(CommandType.FIND, parser.parseCommand("find book"));
         assertEquals(CommandType.TODO, parser.parseCommand("todo read book"));
         assertEquals(CommandType.DEADLINE, parser.parseCommand("deadline return book /by 2019-12-02"));
-        assertEquals(CommandType.EVENT,
-                parser.parseCommand("event meeting /from 2019-12-03 /to 2019-12-05"));
+        assertEquals(CommandType.EVENT, parser.parseCommand("event meeting /from 2019-12-03 /to 2019-12-05"));
         assertEquals(CommandType.MARK, parser.parseCommand("mark 1"));
         assertEquals(CommandType.UNMARK, parser.parseCommand("unmark 1"));
         assertEquals(CommandType.DELETE, parser.parseCommand("delete 1"));
         assertEquals(CommandType.BYE, parser.parseCommand("bye"));
         assertEquals(CommandType.UNKNOWN, parser.parseCommand("unknown"));
+    }
+
+    @Test
+    public void parseFindKeyword_validAndMissingKeyword_returnsKeywordOrThrowsException()
+            throws OllieException {
+        assertEquals("book", parser.parseFindKeyword("find book"));
+        assertThrows(OllieException.class, () -> parser.parseFindKeyword("find"));
     }
 
     @Test
@@ -51,8 +58,7 @@ public class ParserTest {
         assertThrows(OllieException.class, () -> parser.parseTask("unknown"));
         assertThrows(OllieException.class, () -> parser.parseTask("todo"));
         assertThrows(OllieException.class, () -> parser.parseTask("deadline return book"));
-        assertThrows(OllieException.class,
-                () -> parser.parseTask("deadline return book /by 2019-02-30"));
+        assertThrows(OllieException.class, () -> parser.parseTask("deadline return book /by 2019-02-30"));
         assertThrows(OllieException.class, () -> parser.parseTask("event meeting /from 2019-12-03"));
     }
 

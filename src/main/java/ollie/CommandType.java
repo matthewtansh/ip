@@ -8,6 +8,8 @@ public enum CommandType {
     HELP,
     /** Lists all stored tasks. */
     LIST,
+    /** Finds tasks whose descriptions contain a keyword. */
+    FIND,
     /** Creates a todo. */
     TODO,
     /** Creates a deadline. */

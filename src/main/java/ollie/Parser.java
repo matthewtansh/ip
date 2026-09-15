@@ -26,6 +26,8 @@ public class Parser {
                 return CommandType.HELP;
             case "list":
                 return CommandType.LIST;
+            case "find":
+                return CommandType.FIND;
             case "todo":
                 return CommandType.TODO;
             case "deadline":
@@ -43,6 +45,22 @@ public class Parser {
             default:
                 return CommandType.UNKNOWN;
         }
+    }
+
+    /**
+     * Parses the keyword from a find command.
+     *
+     * @param command Find command entered by the user.
+     * @return Keyword to search for.
+     * @throws OllieException If the keyword is empty.
+     */
+    public String parseFindKeyword(String command) throws OllieException {
+        String keyword = command.substring("find".length()).trim();
+        if (keyword.isEmpty()) {
+            throw new OllieException("Tell me what to find. Try: find <keyword>.");
+        }
+
+        return keyword;
     }
 
     /**

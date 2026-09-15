@@ -78,7 +78,7 @@ public class UI {
      * @return Help message.
      */
     public String getHelpMessage() {
-        return String.join(System.lineSeparator(),
+        return joinLines(
                 "Here are the commands I understand:",
                 "• help",
                 "• list",
@@ -93,6 +93,10 @@ public class UI {
                 "• unmark <task number>",
                 "• delete <task number>",
                 "• bye");
+    }
+
+    private String joinLines(String... lines) {
+        return String.join(System.lineSeparator(), lines);
     }
 
     /**

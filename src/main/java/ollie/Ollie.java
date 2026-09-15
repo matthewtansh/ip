@@ -2,6 +2,9 @@ package ollie;
 
 import java.nio.file.Path;
 
+/**
+ * Coordinates Ollie's user interface, command parsing, task list, and storage.
+ */
 public class Ollie {
     private static final Path DATA_FILE_PATH = Path.of("data", "ollie.txt");
 
@@ -10,12 +13,20 @@ public class Ollie {
     private final UI ui;
     private TaskList tasks;
 
+    /**
+     * Creates an Ollie chatbot that stores tasks at the given file path.
+     *
+     * @param filePath Path of the task data file.
+     */
     public Ollie(Path filePath) {
         parser = new Parser();
         storage = new Storage(filePath);
         ui = new UI();
     }
 
+    /**
+     * Starts Ollie's command-processing loop.
+     */
     public void run() {
         ui.showWelcome();
         tasks = loadTasks();
@@ -38,10 +49,22 @@ public class Ollie {
         }
     }
 
+    /**
+     * Starts Ollie using the default task data file.
+     *
+     * @param args Command-line arguments, which are not used.
+     */
     public static void main(String[] args) {
         new Ollie(DATA_FILE_PATH).run();
     }
 
+    /**
+     * Performs the action represented by a user command.
+     *
+     * @param command Command entered by the user.
+     * @return True if Ollie should exit after handling the command.
+     * @throws OllieException If the command is invalid or its action fails.
+     */
     private boolean handleCommand(String command) throws OllieException {
         CommandType commandType = parser.parseCommand(command);
 
@@ -86,6 +109,11 @@ public class Ollie {
         return false;
     }
 
+    /**
+     * Loads saved tasks, or starts with an empty task list if loading fails.
+     *
+     * @return Loaded task list, or an empty task list.
+     */
     private TaskList loadTasks() {
         try {
             return new TaskList(storage.load());
@@ -95,12 +123,23 @@ public class Ollie {
         }
     }
 
+    /**
+     * Adds a task, saves the task list, and reports the addition.
+     *
+     * @param task Task to add.
+     * @throws OllieException If the task list cannot be saved.
+     */
     private void addTask(Task task) throws OllieException {
         tasks.add(task);
         saveTasks();
         ui.showTaskAdded();
     }
 
+    /**
+     * Saves the current task list.
+     *
+     * @throws OllieException If the task list cannot be saved.
+     */
     private void saveTasks() throws OllieException {
         storage.save(tasks.getTasks());
     }

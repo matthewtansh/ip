@@ -9,16 +9,30 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Loads tasks from and saves tasks to a local data file.
+ */
 public class Storage {
     private static final String FIELD_SEPARATOR = " | ";
     private static final String FIELD_SEPARATOR_REGEX = " \\| ";
 
     private final Path filePath;
 
+    /**
+     * Creates a storage manager for the given file path.
+     *
+     * @param filePath Path of the task data file.
+     */
     public Storage(Path filePath) {
         this.filePath = filePath;
     }
 
+    /**
+     * Loads tasks from the data file.
+     *
+     * @return Tasks stored in the data file, or an empty list if the file does not exist.
+     * @throws OllieException If the file cannot be read or contains invalid task data.
+     */
     public List<Task> load() throws OllieException {
         if (!Files.exists(filePath)) {
             return new ArrayList<>();
@@ -38,6 +52,12 @@ public class Storage {
         }
     }
 
+    /**
+     * Saves the given tasks to the data file.
+     *
+     * @param tasks Tasks to save.
+     * @throws OllieException If the data file cannot be written or a task type is unsupported.
+     */
     public void save(List<Task> tasks) throws OllieException {
         try {
             Path parentDirectory = filePath.getParent();
@@ -55,6 +75,13 @@ public class Storage {
         }
     }
 
+    /**
+     * Converts a task into its storage representation.
+     *
+     * @param task Task to convert.
+     * @return Serialized task.
+     * @throws OllieException If the task type is unsupported.
+     */
     private String formatTask(Task task) throws OllieException {
         String status = task.isDone() ? "1" : "0";
         if (task instanceof Todo) {
@@ -72,6 +99,14 @@ public class Storage {
         throw new OllieException("I couldn't save an unsupported task type.");
     }
 
+    /**
+     * Converts one line of stored data into a task.
+     *
+     * @param line Stored task data.
+     * @param lineNumber One-based line number used in error messages.
+     * @return Parsed task.
+     * @throws OllieException If the stored task data is invalid.
+     */
     private Task parseTask(String line, int lineNumber) throws OllieException {
         String[] fields = line.split(FIELD_SEPARATOR_REGEX, -1);
         if (fields.length < 3 || fields[2].isBlank()) {
@@ -111,6 +146,14 @@ public class Storage {
         return task;
     }
 
+    /**
+     * Parses a stored ISO date.
+     *
+     * @param dateText Date text to parse.
+     * @param lineNumber One-based line number used in error messages.
+     * @return Parsed date.
+     * @throws OllieException If the date is invalid.
+     */
     private LocalDate parseDate(String dateText, int lineNumber) throws OllieException {
         try {
             return LocalDate.parse(dateText);
@@ -119,6 +162,12 @@ public class Storage {
         }
     }
 
+    /**
+     * Creates an exception describing invalid saved data.
+     *
+     * @param lineNumber One-based line number containing invalid data.
+     * @return Exception containing a user-friendly error message.
+     */
     private OllieException invalidData(int lineNumber) {
         return new OllieException("The saved task on line " + lineNumber + " is invalid.");
     }

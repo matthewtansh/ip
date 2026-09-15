@@ -42,6 +42,7 @@ public class TaskList {
      * @return Removed task.
      */
     public Task delete(int index) {
+        assertValidIndex(index);
         return tasks.remove(index);
     }
 
@@ -51,6 +52,7 @@ public class TaskList {
      * @param index Zero-based task index.
      */
     public void mark(int index) {
+        assertValidIndex(index);
         tasks.get(index).mark();
     }
 
@@ -60,6 +62,7 @@ public class TaskList {
      * @param index Zero-based task index.
      */
     public void unmark(int index) {
+        assertValidIndex(index);
         tasks.get(index).unmark();
     }
 
@@ -86,6 +89,7 @@ public class TaskList {
      * @return Task at the index.
      */
     public Task get(int index) {
+        assertValidIndex(index);
         return tasks.get(index);
     }
 
@@ -105,5 +109,9 @@ public class TaskList {
      */
     public List<Task> getTasks() {
         return List.copyOf(tasks);
+    }
+
+    private void assertValidIndex(int index) {
+        assert index >= 0 && index < tasks.size() : "Task index should be within list bounds";
     }
 }

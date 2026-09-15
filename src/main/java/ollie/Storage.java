@@ -13,6 +13,20 @@ import java.util.List;
  * Loads tasks from and saves tasks to a local data file.
  */
 public class Storage {
+    private static final int TYPE_FIELD_INDEX = 0;
+    private static final int STATUS_FIELD_INDEX = 1;
+    private static final int DESCRIPTION_FIELD_INDEX = 2;
+    private static final int DATE_FIELD_INDEX = 3;
+    private static final int END_DATE_FIELD_INDEX = 4;
+    private static final int TODO_FIELD_COUNT = 3;
+    private static final int DEADLINE_FIELD_COUNT = 4;
+    private static final int EVENT_FIELD_COUNT = 5;
+
+    private static final String TODO_TYPE = "T";
+    private static final String DEADLINE_TYPE = "D";
+    private static final String EVENT_TYPE = "E";
+    private static final String DONE_STATUS = "1";
+    private static final String NOT_DONE_STATUS = "0";
     private static final String FIELD_SEPARATOR = " | ";
     private static final String FIELD_SEPARATOR_REGEX = " \\| ";
 
@@ -83,16 +97,16 @@ public class Storage {
      * @throws OllieException If the task type is unsupported.
      */
     private String formatTask(Task task) throws OllieException {
-        String status = task.isDone() ? "1" : "0";
+        String status = task.isDone() ? DONE_STATUS : NOT_DONE_STATUS;
         if (task instanceof Todo) {
-            return String.join(FIELD_SEPARATOR, "T", status, task.getDescription());
+            return String.join(FIELD_SEPARATOR, TODO_TYPE, status, task.getDescription());
         } else if (task instanceof Deadline) {
             Deadline deadline = (Deadline) task;
-            return String.join(FIELD_SEPARATOR, "D", status, deadline.getDescription(),
+            return String.join(FIELD_SEPARATOR, DEADLINE_TYPE, status, deadline.getDescription(),
                     deadline.getDueDate().toString());
         } else if (task instanceof Event) {
             Event event = (Event) task;
-            return String.join(FIELD_SEPARATOR, "E", status, event.getDescription(),
+            return String.join(FIELD_SEPARATOR, EVENT_TYPE, status, event.getDescription(),
                     event.getStartDate().toString(), event.getEndDate().toString());
         }
 
@@ -109,41 +123,85 @@ public class Storage {
      */
     private Task parseTask(String line, int lineNumber) throws OllieException {
         String[] fields = line.split(FIELD_SEPARATOR_REGEX, -1);
-        if (fields.length < 3 || fields[2].isBlank()) {
+        if (fields.length < TODO_FIELD_COUNT || fields[DESCRIPTION_FIELD_INDEX].isBlank()) {
             throw invalidData(lineNumber);
         }
 
-        Task task;
-        switch (fields[0]) {
-            case "T":
-                if (fields.length != 3) {
-                    throw invalidData(lineNumber);
-                }
-                task = new Todo(fields[2]);
-                break;
-            case "D":
-                if (fields.length != 4 || fields[3].isBlank()) {
-                    throw invalidData(lineNumber);
-                }
-                task = new Deadline(fields[2], parseDate(fields[3], lineNumber));
-                break;
-            case "E":
-                if (fields.length != 5 || fields[3].isBlank() || fields[4].isBlank()) {
-                    throw invalidData(lineNumber);
-                }
-                task = new Event(fields[2], parseDate(fields[3], lineNumber),
-                        parseDate(fields[4], lineNumber));
-                break;
-            default:
-                throw invalidData(lineNumber);
-        }
-
-        if (fields[1].equals("1")) {
-            task.mark();
-        } else if (!fields[1].equals("0")) {
-            throw invalidData(lineNumber);
-        }
+        Task task = switch (fields[TYPE_FIELD_INDEX]) {
+            case TODO_TYPE -> parseTodo(fields, lineNumber);
+            case DEADLINE_TYPE -> parseDeadline(fields, lineNumber);
+            case EVENT_TYPE -> parseEvent(fields, lineNumber);
+            default -> throw invalidData(lineNumber);
+        };
+        restoreStatus(task, fields[STATUS_FIELD_INDEX], lineNumber);
         return task;
+    }
+
+    /**
+     * Parses a stored todo after the common task fields have been validated.
+     *
+     * @param fields Stored task fields.
+     * @param lineNumber One-based line number used in error messages.
+     * @return Parsed todo.
+     * @throws OllieException If the todo has an invalid number of fields.
+     */
+    private Todo parseTodo(String[] fields, int lineNumber) throws OllieException {
+        if (fields.length != TODO_FIELD_COUNT) {
+            throw invalidData(lineNumber);
+        }
+        return new Todo(fields[DESCRIPTION_FIELD_INDEX]);
+    }
+
+    /**
+     * Parses a stored deadline after the common task fields have been validated.
+     *
+     * @param fields Stored task fields.
+     * @param lineNumber One-based line number used in error messages.
+     * @return Parsed deadline.
+     * @throws OllieException If deadline-specific fields are invalid.
+     */
+    private Deadline parseDeadline(String[] fields, int lineNumber) throws OllieException {
+        if (fields.length != DEADLINE_FIELD_COUNT || fields[DATE_FIELD_INDEX].isBlank()) {
+            throw invalidData(lineNumber);
+        }
+        return new Deadline(fields[DESCRIPTION_FIELD_INDEX],
+                parseDate(fields[DATE_FIELD_INDEX], lineNumber));
+    }
+
+    /**
+     * Parses a stored event after the common task fields have been validated.
+     *
+     * @param fields Stored task fields.
+     * @param lineNumber One-based line number used in error messages.
+     * @return Parsed event.
+     * @throws OllieException If event-specific fields are invalid.
+     */
+    private Event parseEvent(String[] fields, int lineNumber) throws OllieException {
+        if (fields.length != EVENT_FIELD_COUNT) {
+            throw invalidData(lineNumber);
+        }
+        if (fields[DATE_FIELD_INDEX].isBlank() || fields[END_DATE_FIELD_INDEX].isBlank()) {
+            throw invalidData(lineNumber);
+        }
+        return new Event(fields[DESCRIPTION_FIELD_INDEX],
+                parseDate(fields[DATE_FIELD_INDEX], lineNumber),
+                parseDate(fields[END_DATE_FIELD_INDEX], lineNumber));
+    }
+
+    /**
+     * Restores a task's completion state from its stored status field.
+     *
+     * @param task Task whose state is restored.
+     * @param status Stored completion status.
+     * @param lineNumber One-based line number used in error messages.
+     * @throws OllieException If the status is not recognized.
+     */
+    private void restoreStatus(Task task, String status, int lineNumber) throws OllieException {
+        if (status.equals(DONE_STATUS)) {
+            task.mark();
+        } else if (!status.equals(NOT_DONE_STATUS)) {
+            throw invalidData(lineNumber);
+        }
     }
 
     /**

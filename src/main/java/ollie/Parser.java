@@ -298,7 +298,8 @@ public class Parser {
 
     private int findParameterIndex(String details, String parameter) {
         Matcher matcher = createParameterPattern(parameter).matcher(details);
-        assert matcher.find() : "Required parameter should be present before locating it";
+        boolean isParameterFound = matcher.find();
+        assert isParameterFound : "Required parameter should be present before locating it";
         return matcher.start();
     }
 

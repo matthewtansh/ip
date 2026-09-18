@@ -35,7 +35,8 @@ public class MainWindow {
     public void setOllie(Ollie ollie) {
         this.ollie = ollie;
         dialogContainer.getChildren().add(
-                DialogBox.getOllieDialog("Hello! I'm Ollie. Type help to see what I can do."));
+                DialogBox.getOllieDialog("Mission control online. I'm Ollie—here to keep "
+                        + "your day in orbit. Type help to open the flight manual."));
         userInput.requestFocus();
     }
 

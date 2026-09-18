@@ -6,6 +6,9 @@ import java.util.Scanner;
  * Handles console input and output for Ollie.
  */
 public class UI {
+    static final String APP_NAME = "Ollie Mission Control";
+    static final String SPEAKER_NAME = "OLLIE / CONTROL";
+
     private static final int HORIZONTAL_LINE_LENGTH = 60;
     private static final String HORIZONTAL_LINE = "-".repeat(HORIZONTAL_LINE_LENGTH);
     private static final String INDENTATION = "    ";
@@ -23,15 +26,9 @@ public class UI {
      * Displays Ollie's welcome message.
      */
     public void showWelcome() {
-        String banner = "  ___  _ _ _      \n"
-                + " / _ \\| | (_) ___ \n"
-                + "| | | | | | |/ _ \\\n"
-                + "| |_| | | | |  __/\n"
-                + " \\___/|_|_|_|\\___|\n";
-
-        System.out.print(banner);
-        System.out.println("Hello! I'm Ollie.");
-        System.out.println("What can I do for you?");
+        System.out.println("OLLIE // MISSION CONTROL");
+        System.out.println("Systems online. Let's put your day into orbit.");
+        System.out.println("Type help to open the flight manual.");
     }
 
     /**
@@ -69,7 +66,7 @@ public class UI {
      * @return Goodbye message.
      */
     public String getGoodbyeMessage() {
-        return "Bye. Hope to see you again soon!";
+        return "Mission complete. Safe travels—Ollie signing off.";
     }
 
     /**
@@ -79,7 +76,7 @@ public class UI {
      */
     public String getHelpMessage() {
         return joinLines(
-                "Here are the commands I understand:",
+                "Flight manual — available commands:",
                 "• help",
                 "• list",
                 "• find <keyword>",
@@ -106,7 +103,7 @@ public class UI {
      * @return Task list message.
      */
     public String getTaskListMessage(TaskList tasks) {
-        return getNumberedTasksMessage("Here are the tasks in your list:", tasks);
+        return getNumberedTasksMessage("Current mission board:", tasks);
     }
 
     /**
@@ -116,7 +113,7 @@ public class UI {
      * @return Matching tasks message.
      */
     public String getMatchingTasksMessage(TaskList tasks) {
-        return getNumberedTasksMessage("Here are the matching tasks in your list:", tasks);
+        return getNumberedTasksMessage("Tasks detected on radar:", tasks);
     }
 
     /**
@@ -143,7 +140,7 @@ public class UI {
      * @return Mark confirmation.
      */
     public String getTaskMarkedMessage() {
-        return "Nice! I've marked this task as done.";
+        return "Telemetry confirmed — mission complete.";
     }
 
     /**
@@ -152,7 +149,7 @@ public class UI {
      * @return Unmark confirmation.
      */
     public String getTaskUnmarkedMessage() {
-        return "Nice! I've marked this task as undone.";
+        return "Mission reopened and returned to the flight plan.";
     }
 
     /**
@@ -161,7 +158,7 @@ public class UI {
      * @return Deletion confirmation.
      */
     public String getTaskDeletedMessage() {
-        return "Noted. I've removed this task:";
+        return "Mission scrubbed from the flight plan.";
     }
 
     /**
@@ -170,7 +167,7 @@ public class UI {
      * @return Addition confirmation.
      */
     public String getTaskAddedMessage() {
-        return "Got it. I've added this task.";
+        return "Mission logged and ready for launch.";
     }
 
     /**
@@ -189,7 +186,7 @@ public class UI {
      * @return Formatted error message.
      */
     public String getErrorMessage(String message) {
-        return "OOPS! " + message;
+        return "Course correction needed — " + message;
     }
 
     /**

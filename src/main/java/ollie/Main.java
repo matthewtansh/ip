@@ -27,7 +27,7 @@ public class Main extends Application {
         mainWindow.setOllie(ollie);
 
         stage.setScene(new Scene(root));
-        stage.setTitle("Ollie");
+        stage.setTitle(UI.APP_NAME);
         stage.setHeight(WINDOW_HEIGHT);
         stage.setWidth(WINDOW_WIDTH);
         stage.setMinHeight(MINIMUM_WINDOW_HEIGHT);

@@ -58,7 +58,7 @@ public class DialogBox extends VBox {
      * @return Ollie dialog box.
      */
     public static DialogBox getOllieDialog(String text) {
-        DialogBox dialogBox = new DialogBox(text, "Ollie", OLLIE_STYLE_CLASS);
+        DialogBox dialogBox = new DialogBox(text, UI.SPEAKER_NAME, OLLIE_STYLE_CLASS);
         dialogBox.showAsOllieMessage();
         return dialogBox;
     }
@@ -70,7 +70,7 @@ public class DialogBox extends VBox {
      * @return Error dialog box.
      */
     public static DialogBox getErrorDialog(String text) {
-        DialogBox dialogBox = new DialogBox(text, "Ollie · error", ERROR_STYLE_CLASS);
+        DialogBox dialogBox = new DialogBox(text, "OLLIE / ALERT", ERROR_STYLE_CLASS);
         dialogBox.showAsOllieMessage();
         return dialogBox;
     }

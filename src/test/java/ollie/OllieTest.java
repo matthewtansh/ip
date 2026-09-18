@@ -18,7 +18,7 @@ public class OllieTest {
     public void getResponse_addListAndFindCommands_returnsExpectedResponses() {
         Ollie ollie = new Ollie(tempDirectory.resolve("data").resolve("tasks.txt"));
 
-        assertTrue(ollie.getResponse("  todo   Read Book  ").contains("added this task"));
+        assertTrue(ollie.getResponse("  todo   Read Book  ").contains("Mission logged"));
         assertTrue(ollie.getResponse("list").contains("[todo][ ] Read Book"));
         assertTrue(ollie.getResponse("find book").contains("[todo][ ] Read Book"));
     }
@@ -29,7 +29,7 @@ public class OllieTest {
 
         Ollie.CommandResponse response = ollie.getCommandResponse("unknown");
 
-        assertTrue(response.message().contains("OOPS!"));
+        assertTrue(response.message().contains("Course correction needed"));
         assertTrue(response.isError());
         assertFalse(response.isExit());
     }
@@ -114,7 +114,7 @@ public class OllieTest {
 
         String response = ollie.getResponse("help");
 
-        assertTrue(response.startsWith("Here are the commands I understand:"));
+        assertTrue(response.startsWith("Flight manual — available commands:"));
         assertTrue(response.contains("• deadline <description>"
                 + System.lineSeparator() + "    /by <yyyy-MM-dd>"));
         assertTrue(response.contains("• event <description>"
